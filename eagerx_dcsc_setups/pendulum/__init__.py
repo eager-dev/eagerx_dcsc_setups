@@ -1,0 +1,2 @@
+import eagerx_dcsc_setups.pendulum.objects
+import eagerx_dcsc_setups.pendulum.converters
