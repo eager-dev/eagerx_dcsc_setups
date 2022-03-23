@@ -15,9 +15,15 @@ from eagerx.utils.utils import Msg
 
 class PendulumImage(EngineNode):
     @staticmethod
-    @register.spec('PendulumImage', EngineNode)
-    def spec(spec, name: str, rate: float, process: Optional[int] = process.NEW_PROCESS,
-             color: Optional[str] = 'cyan', shape=[480, 480]):
+    @register.spec("PendulumImage", EngineNode)
+    def spec(
+        spec,
+        name: str,
+        rate: float,
+        process: Optional[int] = process.NEW_PROCESS,
+        color: Optional[str] = "cyan",
+        shape=[480, 480],
+    ):
         """PendulumImage spec"""
         # Performs all the steps to fill-in the params with registered info about all functions.
         spec.initialize(PendulumImage)
@@ -40,7 +46,7 @@ class PendulumImage(EngineNode):
         self.cv_bridge = cv_bridge.CvBridge()
         self.shape = tuple(shape)
         self.render_toggle = False
-        self.render_toggle_pub = rospy.Subscriber('%s/env/render/toggle' % self.ns, Bool, self._set_render_toggle)
+        self.render_toggle_pub = rospy.Subscriber("%s/env/render/toggle" % self.ns, Bool, self._set_render_toggle)
 
     @register.states()
     def reset(self):
@@ -61,21 +67,22 @@ class PendulumImage(EngineNode):
                 sin_theta, cos_theta, _ = state
             elif len(state) == 2:
                 sin_theta, cos_theta = np.sin(state[0]), np.cos(state[0])
-                img = cv2.circle(img, (width // 2 + int(l * sin_theta), height // 2 - int(l * cos_theta)), height // 6,
-                                 (192, 192, 192), -1)
+                img = cv2.circle(
+                    img, (width // 2 + int(l * sin_theta), height // 2 - int(l * cos_theta)), height // 6, (192, 192, 192), -1
+                )
             try:
-                msg = self.cv_bridge.cv2_to_imgmsg(img, 'bgr8')
+                msg = self.cv_bridge.cv2_to_imgmsg(img, "bgr8")
             except ImportError as e:
-                rospy.logwarn_once('[%s] %s. Using numpy instead.' % (self.ns_name, e))
-                data = img.tobytes('C')
-                msg = Image(data=data, height=height, width=width, encoding='bgr8')
+                rospy.logwarn_once("[%s] %s. Using numpy instead." % (self.ns_name, e))
+                data = img.tobytes("C")
+                msg = Image(data=data, height=height, width=width, encoding="bgr8")
         else:
             msg = Image()
         return dict(image=msg)
 
     def _set_render_toggle(self, msg):
         if msg.data:
-            rospy.loginfo('[%s] START RENDERING!' % self.name)
+            rospy.loginfo("[%s] START RENDERING!" % self.name)
         else:
-            rospy.loginfo('[%s] STOPPED RENDERING!' % self.name)
+            rospy.loginfo("[%s] STOPPED RENDERING!" % self.name)
         self.render_toggle = msg.data

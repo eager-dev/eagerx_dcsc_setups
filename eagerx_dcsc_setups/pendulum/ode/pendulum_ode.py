@@ -4,7 +4,7 @@ from math import sin, exp
 def pendulum_ode(x, t, u, J, m, l, b0, K, R, c, a):
     g = 9.81
 
-    b = b0 + a * exp(- x[1] * x[1] / (c * c))
+    b = b0 + a * exp(-x[1] * x[1] / (c * c))
 
     ddx = (m * g * l * sin(x[0]) - x[1] * (b + K * K / R) + K * u / R) / J
 

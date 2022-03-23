@@ -16,8 +16,8 @@ from dcsc_setups.srv import MopsWrite, MopsWriteRequest, MopsReadRequest, MopsRe
 
 class PendulumOutput(EngineNode):
     @staticmethod
-    @register.spec('PendulumOutput', EngineNode)
-    def spec(spec, name: str, rate: float, process: Optional[int] = process.NEW_PROCESS, color: Optional[str] = 'cyan'):
+    @register.spec("PendulumOutput", EngineNode)
+    def spec(spec, name: str, rate: float, process: Optional[int] = process.NEW_PROCESS, color: Optional[str] = "cyan"):
         """PendulumOutput spec"""
         # Performs all the steps to fill-in the params with registered info about all functions.
         spec.initialize(MopsOutput)
@@ -31,7 +31,7 @@ class PendulumOutput(EngineNode):
         spec.config.outputs = ["pendulum_output"]
 
     def initialize(self):
-        self.service = rospy.ServiceProxy('/mops/read', MopsRead)
+        self.service = rospy.ServiceProxy("/mops/read", MopsRead)
         self.service.wait_for_service()
 
     @register.states()
@@ -48,21 +48,23 @@ class PendulumOutput(EngineNode):
 
 class PendulumInput(EngineNode):
     @staticmethod
-    @register.spec('PendulumInput', EngineNode)
-    def spec(spec, name: str, rate: float, process: Optional[int] = process.NEW_PROCESS, color: Optional[str] = 'green'):
+    @register.spec("PendulumInput", EngineNode)
+    def spec(spec, name: str, rate: float, process: Optional[int] = process.NEW_PROCESS, color: Optional[str] = "green"):
         """PendulumInput spec"""
         # Performs all the steps to fill-in the params with registered info about all functions.
         spec.initialize(PendulumInput)
 
         # Modify default node params
-        params = dict(name=name, rate=rate, process=process, color=color, inputs=['tick', 'pendulum_input'], outputs=['action_applied'])
+        params = dict(
+            name=name, rate=rate, process=process, color=color, inputs=["tick", "pendulum_input"], outputs=["action_applied"]
+        )
         spec.config.update(params)
 
         # Set component parameter
         spec.inputs.pendulum_input.window = 1
 
     def initialize(self):
-        self.service = rospy.ServiceProxy('/mops/write', MopsWrite)
+        self.service = rospy.ServiceProxy("/mops/write", MopsWrite)
         self.service.wait_for_service()
 
     @register.states()
@@ -71,8 +73,7 @@ class PendulumInput(EngineNode):
 
     @register.inputs(tick=UInt64, pendulum_input=Float32MultiArray)
     @register.outputs(action_applied=Float32MultiArray)
-    def callback(self, t_n: float, tick: Optional[Msg] = None,
-                 pendulum_input: Optional[Msg] = None):
+    def callback(self, t_n: float, tick: Optional[Msg] = None, pendulum_input: Optional[Msg] = None):
         if len(pendulum_input.msgs) > 0:
             input = np.squeeze(pendulum_input.msgs[-1].data)
             if input is not None:
