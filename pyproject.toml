@@ -29,7 +29,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.semantic_release]
 version_variable = [
-    "eagerx_ode/__init__.py:__version__",
+    "eagerx_dcsc_setups/__init__.py:__version__",
     "pyproject.toml:version"
 ]
 branch = "master"
