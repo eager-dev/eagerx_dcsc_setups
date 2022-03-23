@@ -67,9 +67,9 @@ if __name__ == "__main__":
     env = Flatten(EagerxEnv(name="rx", rate=rate, graph=graph, bridge=bridge, step_fn=step_fn))
 
     # Initialize learner (kudos to Antonin)
-    model = sb.SAC("MlpPolicy", env, verbose=1, device="cpu")
+    model = sb.SAC("MlpPolicy", env, verbose=1)
 
-    # First train in simulation
+    # First train in simulation for 5 minutes
     env.render("human")
     model.learn(total_timesteps=int(300 * rate))
 
@@ -78,7 +78,7 @@ if __name__ == "__main__":
     eps = 0
     action = env.action_space.sample()
     print(f"Episode {eps}")
-    for i in range(int(50000 * rate)):
+    for i in range(int(30 * rate)):
         action, _states = model.predict(obs, deterministic=True)
         if i % 500 == 0:
             eps += 1
