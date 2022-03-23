@@ -13,8 +13,8 @@ python = "^3.6.2"
 stable-baselines3 = "1.0"
 eagerx = "^0.1.10"
 eagerx-gui = "^0.1.3"
-eagerx-ode = "^0.1.2"
-eagerx-reality = "^0.1.2"
+eagerx-ode = "^0.1.4"
+eagerx-reality = "^0.1.4"
 
 [tool.poetry.dev-dependencies]
 black = "^22.1.0"
