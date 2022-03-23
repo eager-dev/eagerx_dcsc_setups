@@ -20,7 +20,7 @@ class PendulumOutput(EngineNode):
     def spec(spec, name: str, rate: float, process: Optional[int] = process.NEW_PROCESS, color: Optional[str] = "cyan"):
         """PendulumOutput spec"""
         # Performs all the steps to fill-in the params with registered info about all functions.
-        spec.initialize(MopsOutput)
+        spec.initialize(PendulumOutput)
 
         # Modify default node params
         spec.config.name = name
@@ -41,7 +41,7 @@ class PendulumOutput(EngineNode):
     @register.inputs(tick=UInt64)
     @register.outputs(pendulum_output=Float32MultiArray)
     def callback(self, t_n: float, tick: Optional[Msg] = None):
-        response = self.service.call(PendulumReadRequest())
+        response = self.service.call(MopsReadRequest())
         data = [np.pi - response.sensors.position0, response.sensors.speed]
         return dict(pendulum_output=Float32MultiArray(data=data))
 
