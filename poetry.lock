@@ -947,7 +947,7 @@ test = ["pytest"]
 
 [[package]]
 name = "stable-baselines3"
-version = "1.0"
+version = "1.2.0"
 description = "Pytorch version of Stable Baselines, implementations of reinforcement learning algorithms."
 category = "main"
 optional = false
@@ -959,12 +959,12 @@ gym = ">=0.17"
 matplotlib = "*"
 numpy = "*"
 pandas = "*"
-torch = ">=1.4.0"
+torch = ">=1.8.1"
 
 [package.extras]
 docs = ["sphinx", "sphinx-autobuild", "sphinx-rtd-theme", "sphinxcontrib.spelling", "sphinx-autodoc-typehints"]
 extra = ["opencv-python", "atari-py (>=0.2.0,<0.3.0)", "pillow", "tensorboard (>=2.2.0)", "psutil"]
-tests = ["pytest", "pytest-cov", "pytest-env", "pytest-xdist", "pytype", "flake8 (>=3.8)", "isort (>=5.0)", "black"]
+tests = ["pytest", "pytest-cov", "pytest-env", "pytest-xdist", "pytype", "flake8 (>=3.8)", "flake8-bugbear", "isort (>=5.0)", "black", "scipy (>=1.4.1)"]
 
 [[package]]
 name = "tabulate"
@@ -1071,7 +1071,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytes
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6.2"
-content-hash = "926fde1d767cdd56c324f4719e679cb0f8ec1654fb9c8f33642cf2bd25d1325c"
+content-hash = "7607d98b1ddac547c3b06a6e4bb8663aee53dcd74c629a164f4245309210cddf"
 
 [metadata.files]
 alabaster = [
@@ -1866,8 +1866,8 @@ sphinxcontrib-serializinghtml = [
     {file = "sphinxcontrib_serializinghtml-1.1.5-py2.py3-none-any.whl", hash = "sha256:352a9a00ae864471d3a7ead8d7d79f5fc0b57e8b3f95e9867eb9eb28999b92fd"},
 ]
 stable-baselines3 = [
-    {file = "stable_baselines3-1.0-py3-none-any.whl", hash = "sha256:0de2d9696c19ebb68b154c8b1a617d70a94c441bd3b5418080d6ac1e4c09c5db"},
-    {file = "stable_baselines3-1.0.tar.gz", hash = "sha256:266f34caf6fd570b5b42c3a6c1b129cf4b188cec658910180d8983f4d993438a"},
+    {file = "stable_baselines3-1.2.0-py3-none-any.whl", hash = "sha256:15769fe983fd0c14067c87294a1f5cd081fdfdb02092bc1277ec3fad45e9bd13"},
+    {file = "stable_baselines3-1.2.0.tar.gz", hash = "sha256:170842f30c00adff0dcccef5be74921cfa0dd2650b3eb8600c62b5d43ff78c67"},
 ]
 tabulate = [
     {file = "tabulate-0.8.9-py3-none-any.whl", hash = "sha256:d7c013fe7abbc5e491394e10fa845f8f32fe54f8dc60c6622c6cf482d25d47e4"},
