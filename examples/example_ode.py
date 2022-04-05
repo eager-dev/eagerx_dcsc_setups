@@ -69,20 +69,18 @@ if __name__ == "__main__":
     # Initialize learner (kudos to Antonin)
     model = sb.SAC("MlpPolicy", env, verbose=1)
 
-    # First train in simulation for 5 minutes
+    # First train in simulation for 5 minutes and save
     env.render("human")
     model.learn(total_timesteps=int(300 * rate))
-
-    # Evaluate for 30 seconds in simulation
-    obs = env.reset()
-    eps = 0
-    action = env.action_space.sample()
-    print(f"Episode {eps}")
-    for i in range(int(30 * rate)):
-        action, _states = model.predict(obs, deterministic=True)
-        if i % 500 == 0:
-            eps += 1
-            obs = env.reset()
-            print(f"Episode {eps}")
-
     model.save("simulation")
+
+    # Evaluate
+    obs = env.reset()
+    while True:
+        action, _states = model.predict(obs, deterministic=True)
+        obs, reward, done, info = env.step(action)
+        env.render()
+        if done:
+            obs = env.reset()
+
+
