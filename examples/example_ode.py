@@ -11,7 +11,7 @@ from eagerx.wrappers import Flatten
 # Implementation specific
 import eagerx.nodes  # Registers butterworth_filter # noqa # pylint: disable=unused-import
 import eagerx_ode  # Registers OdeBridge # noqa # pylint: disable=unused-import
-import eagerx_dcsc_setups.pendulum  # Registers Pendulum # noqa # pylint: disable=unused-import
+import eagerx_dcsc_setups  # Registers Pendulum # noqa # pylint: disable=unused-import
 
 # Other
 import numpy as np
@@ -28,6 +28,9 @@ if __name__ == "__main__":
     # Create pendulum
     pendulum = Object.make("Pendulum", "pendulum", render_shape=[480, 480], sensors=["pendulum_output", "action_applied"],
                        states=["model_state", "model_parameters"])
+    # Visualize EngineGraph
+    pendulum.gui(bridge_id="OdeBridge")
+
     graph.add(pendulum)
 
     # Create Butterworth filter
@@ -44,8 +47,8 @@ if __name__ == "__main__":
     graph.add_component(pendulum.sensors.image)
     graph.render(source=pendulum.sensors.image, rate=10, display=True)
 
-    # Show in the gui
-    # graph.gui()
+    # Visualize Graph
+    graph.gui()
 
     # Define bridges
     bridge = Bridge.make("OdeBridge", rate=rate, is_reactive=True, real_time_factor=0, process=process.NEW_PROCESS)
@@ -72,15 +75,3 @@ if __name__ == "__main__":
     # First train in simulation for 5 minutes and save
     env.render("human")
     model.learn(total_timesteps=int(300 * rate))
-    model.save("simulation")
-
-    # Evaluate
-    obs = env.reset()
-    while True:
-        action, _states = model.predict(obs, deterministic=True)
-        obs, reward, done, info = env.step(action)
-        env.render()
-        if done:
-            obs = env.reset()
-
-
