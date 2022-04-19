@@ -26,22 +26,38 @@ if __name__ == "__main__":
     graph = Graph.create()
 
     # Create pendulum
-    pendulum = Object.make("Pendulum", "pendulum", render_shape=[480, 480], sensors=["pendulum_output", "action_applied"],
-                       states=["model_state", "model_parameters"])
+    pendulum = Object.make(
+        "Pendulum",
+        "pendulum",
+        render_shape=[480, 480],
+        sensors=["pendulum_output", "action_applied"],
+        states=["model_state", "model_parameters"],
+    )
     # Visualize EngineGraph
     pendulum.gui(bridge_id="OdeBridge")
 
     graph.add(pendulum)
 
     # Create Butterworth filter
-    bf = Node.make("ButterworthFilter", name="bf", rate=rate, N=2, Wn=13, process=process.NEW_PROCESS)
+    bf = Node.make(
+        "ButterworthFilter",
+        name="bf",
+        rate=rate,
+        N=2,
+        Wn=13,
+        process=process.NEW_PROCESS,
+    )
     graph.add(bf)
 
     # Connect the nodes
     graph.connect(action="action", target=bf.inputs.signal)
     graph.connect(source=bf.outputs.filtered, target=pendulum.actuators.pendulum_input)
-    graph.connect(source=pendulum.sensors.pendulum_output, observation="observation", window=1)
-    graph.connect(source=pendulum.sensors.action_applied, observation="action_applied", window=1)
+    graph.connect(
+        source=pendulum.sensors.pendulum_output, observation="observation", window=1
+    )
+    graph.connect(
+        source=pendulum.sensors.action_applied, observation="action_applied", window=1
+    )
 
     # Add rendering
     graph.add_component(pendulum.sensors.image)
@@ -51,7 +67,13 @@ if __name__ == "__main__":
     graph.gui()
 
     # Define bridges
-    bridge = Bridge.make("OdeBridge", rate=rate, is_reactive=True, real_time_factor=0, process=process.NEW_PROCESS)
+    bridge = Bridge.make(
+        "OdeBridge",
+        rate=rate,
+        is_reactive=True,
+        real_time_factor=0,
+        process=process.NEW_PROCESS,
+    )
 
     # Define step function
     def step_fn(prev_obs, obs, action, steps):
@@ -67,10 +89,12 @@ if __name__ == "__main__":
         return obs, -cost, done, info
 
     # Initialize Environment
-    env = Flatten(EagerxEnv(name="rx", rate=rate, graph=graph, bridge=bridge, step_fn=step_fn))
+    env = Flatten(
+        EagerxEnv(name="rx", rate=rate, graph=graph, bridge=bridge, step_fn=step_fn)
+    )
 
     # Initialize learner (kudos to Antonin)
-    model = sb.SAC("MlpPolicy", env, verbose=1)
+    model = sb.SAC("MlpPolicy", env, verbose=1, device="cpu")
 
     # First train in simulation for 5 minutes and save
     env.render("human")

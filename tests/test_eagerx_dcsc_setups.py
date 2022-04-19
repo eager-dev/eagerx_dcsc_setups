@@ -20,6 +20,7 @@ import pytest
 NP = process.NEW_PROCESS
 ENV = process.ENVIRONMENT
 
+
 @pytest.mark.parametrize(
     "eps, steps, is_reactive, rtf, p",
     [(3, 3, True, 0, ENV)],
@@ -47,11 +48,21 @@ def test_pendulum_ode(eps, steps, is_reactive, rtf, p):
 
     # Connect the nodes
     graph.connect(action="action", target=pendulum.actuators.pendulum_input)
-    graph.connect(source=pendulum.sensors.pendulum_output, observation="observation", window=1)
-    graph.connect(source=pendulum.sensors.action_applied, observation="action_applied", window=1)
+    graph.connect(
+        source=pendulum.sensors.pendulum_output, observation="observation", window=1
+    )
+    graph.connect(
+        source=pendulum.sensors.action_applied, observation="action_applied", window=1
+    )
 
     # Define bridges
-    bridge = Bridge.make("OdeBridge", rate=rate, is_reactive=is_reactive, real_time_factor=rtf, process=bridge_p)
+    bridge = Bridge.make(
+        "OdeBridge",
+        rate=rate,
+        is_reactive=is_reactive,
+        real_time_factor=rtf,
+        process=bridge_p,
+    )
 
     # Define step function
     def step_fn(prev_obs, obs, action, steps):
@@ -63,7 +74,7 @@ def test_pendulum_ode(eps, steps, is_reactive, rtf, p):
         else:
             sin_th, cos_th, thdot = 0, -1, 0
         th = np.arctan2(sin_th, cos_th)
-        cost = th ** 2 + 0.1 * (thdot / (1 + 10 * abs(th))) ** 2
+        cost = th**2 + 0.1 * (thdot / (1 + 10 * abs(th))) ** 2
         # Determine done flag
         done = steps > 500
         # Set info:
@@ -71,7 +82,9 @@ def test_pendulum_ode(eps, steps, is_reactive, rtf, p):
         return obs, -cost, done, info
 
     # Initialize Environment
-    env = Flatten(EagerxEnv(name=name, rate=rate, graph=graph, bridge=bridge, step_fn=step_fn))
+    env = Flatten(
+        EagerxEnv(name=name, rate=rate, graph=graph, bridge=bridge, step_fn=step_fn)
+    )
 
     # First reset
     env.reset()
@@ -86,4 +99,3 @@ def test_pendulum_ode(eps, steps, is_reactive, rtf, p):
     if roscore:
         roscore.shutdown()
     print("\n[Shutdown]")
-

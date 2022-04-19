@@ -11,10 +11,10 @@ documentation = "https://eagerx.readthedocs.io/en/master/"
 [tool.poetry.dependencies]
 python = "^3.8"
 stable-baselines3 = "^1.2.0"
-eagerx = "^0.1.14"
-eagerx-ode = "^0.1.4"
-eagerx-reality = "^0.1.4"
+eagerx = "^0.1.16"
 eagerx-gui = "^0.2.0"
+eagerx-ode = "^0.1.6"
+eagerx-reality = "^0.1.5"
 
 [tool.poetry.dev-dependencies]
 black = "^22.3.0"
