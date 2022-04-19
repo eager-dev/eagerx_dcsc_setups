@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.1.8 (2022-04-19)
+### Fix
+* Bump eagerx, eagerx_ode and update render for ode accordingly ([`11121c2`](https://github.com/eager-dev/eagerx_dcsc_setups/commit/11121c21d844fd8fa5dc4b06144f271b98c9ca19))
+
 ## v0.1.7 (2022-04-12)
 ### Fix
 * Remove flake8 constraint and bump gui ([`acda191`](https://github.com/eager-dev/eagerx_dcsc_setups/commit/acda191c9228fb341b4d339af84e66a837bac67c))
