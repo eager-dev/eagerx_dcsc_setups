@@ -168,7 +168,7 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 
 [[package]]
 name = "eagerx"
-version = "0.1.14"
+version = "0.1.16"
 description = "Engine Angostic Gym Environments for Robotics"
 category = "main"
 optional = false
@@ -208,7 +208,7 @@ pyqtgraph = ">=0.12.4,<0.13.0"
 
 [[package]]
 name = "eagerx-ode"
-version = "0.1.5"
+version = "0.1.7"
 description = "Bridge (with corresponding nodes) that uses arbitrary ODEs to simulate objects in EAGERx."
 category = "main"
 optional = false
@@ -1077,7 +1077,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "da90ef402e8259951e0b28bb71f7735d16daa621f8b01fe39ff6fe1d0ebb5fd3"
+content-hash = "ba62fbcf581adb306c1d3b191022296f520edf270ff3681f20f3a9e7641cf768"
 
 [metadata.files]
 alabaster = [
@@ -1205,16 +1205,16 @@ docutils = [
     {file = "docutils-0.17.1.tar.gz", hash = "sha256:686577d2e4c32380bb50cbb22f575ed742d58168cee37e99117a854bcd88f125"},
 ]
 eagerx = [
-    {file = "eagerx-0.1.14-py3-none-any.whl", hash = "sha256:6338fae72766314c98aa6a0dcf7b68838453c8a098df1d1f8343070a6ddbd59d"},
-    {file = "eagerx-0.1.14.tar.gz", hash = "sha256:e2b0c30797bf416d35f7e0338fd2124942e2e06b464ce44faf24edaa9187649d"},
+    {file = "eagerx-0.1.16-py3-none-any.whl", hash = "sha256:09e7bf848cbaf826d71c7a4f11d9f68c8b22c9f666b1871a5b0c349ec04ce04e"},
+    {file = "eagerx-0.1.16.tar.gz", hash = "sha256:66fdd4104a1dce78d83c09f10215e788d713dd23b658b49f8367e34db33363db"},
 ]
 eagerx-gui = [
     {file = "eagerx_gui-0.2.0-py3-none-any.whl", hash = "sha256:5edab504d8bd4366981dd3c4a173ce9e3ebf6d0d8cfe9fea1ddbe7761c60a74d"},
     {file = "eagerx_gui-0.2.0.tar.gz", hash = "sha256:0f52efce9b4df0cbc2d9fa9e718c664f6076920f1d10c8d3dd8a863728d2e909"},
 ]
 eagerx-ode = [
-    {file = "eagerx_ode-0.1.5-py3-none-any.whl", hash = "sha256:d36246548933163d24410ddd519aad2b4122549efaf28987b67fc92fa8458d45"},
-    {file = "eagerx_ode-0.1.5.tar.gz", hash = "sha256:c5a13d6701a9845397aa487292a7bb30f80a51c78b1d68622a65f0805d56b3ab"},
+    {file = "eagerx_ode-0.1.7-py3-none-any.whl", hash = "sha256:f2a78c8b5eff88abfdea756b733785e461fca9cde7c5d97f9eb6b5a23a35cc7e"},
+    {file = "eagerx_ode-0.1.7.tar.gz", hash = "sha256:5df18cc6b55877c9069811b9dab9aa8cd9fde31709eb3b37f0ac18bc5da2f418"},
 ]
 eagerx-reality = [
     {file = "eagerx_reality-0.1.5-py3-none-any.whl", hash = "sha256:b8890b054216d5ddffe3ed301f4a4b43ac6e695454f4173f5c04cbbaf9e1e958"},

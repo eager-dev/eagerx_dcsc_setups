@@ -106,7 +106,12 @@ class Pendulum(Object):
         # Create sensor engine nodes
         obs = EngineNode.make("OdeOutput", "pendulum_output", rate=spec.sensors.pendulum_output.rate, process=2)
         image = EngineNode.make(
-            "PendulumImage", "image", shape=spec.config.render_shape, rate=spec.sensors.image.rate, process=0
+            "OdeRender",
+            "image",
+            shape=spec.config.render_shape,
+            render_fn="eagerx_dcsc_setups.pendulum.ode.pendulum_render/pendulum_render_fn",
+            rate=spec.sensors.image.rate,
+            process=2,
         )
 
         # Create actuator engine nodes
@@ -117,12 +122,13 @@ class Pendulum(Object):
         # Connect all engine nodes
         graph.add([obs, image, action])
         graph.connect(source=obs.outputs.observation, sensor="pendulum_output")
-        graph.connect(source=obs.outputs.observation, target=image.inputs.theta)
+        graph.connect(source=obs.outputs.observation, target=image.inputs.observation)
         graph.connect(source=image.outputs.image, sensor="image")
+        graph.connect(source=action.outputs.action_applied, target=image.inputs.action_applied, skip=True)
         graph.connect(actuator="pendulum_input", target=action.inputs.action)
 
         # Add action applied
-        applied = EngineNode.make("ActionApplied", "applied", rate=spec.sensors.action_applied.rate, process=0)
+        applied = EngineNode.make("ActionApplied", "applied", rate=spec.sensors.action_applied.rate, process=2)
         graph.add(applied)
         graph.connect(source=action.outputs.action_applied, target=applied.inputs.action_applied, skip=True)
         graph.connect(source=applied.outputs.action_applied, sensor="action_applied")
