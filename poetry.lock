@@ -208,7 +208,7 @@ pyqtgraph = ">=0.12.4,<0.13.0"
 
 [[package]]
 name = "eagerx-ode"
-version = "0.1.7"
+version = "0.1.8"
 description = "Bridge (with corresponding nodes) that uses arbitrary ODEs to simulate objects in EAGERx."
 category = "main"
 optional = false
@@ -1213,8 +1213,8 @@ eagerx-gui = [
     {file = "eagerx_gui-0.2.0.tar.gz", hash = "sha256:0f52efce9b4df0cbc2d9fa9e718c664f6076920f1d10c8d3dd8a863728d2e909"},
 ]
 eagerx-ode = [
-    {file = "eagerx_ode-0.1.7-py3-none-any.whl", hash = "sha256:f2a78c8b5eff88abfdea756b733785e461fca9cde7c5d97f9eb6b5a23a35cc7e"},
-    {file = "eagerx_ode-0.1.7.tar.gz", hash = "sha256:5df18cc6b55877c9069811b9dab9aa8cd9fde31709eb3b37f0ac18bc5da2f418"},
+    {file = "eagerx_ode-0.1.8-py3-none-any.whl", hash = "sha256:4f01af25e2bf8850838af382725f3496d5ff3438defd90ed9f8001b18421e37f"},
+    {file = "eagerx_ode-0.1.8.tar.gz", hash = "sha256:a962f422fe48a18ecc26056e75fd27beaae141eab91c8647e3368fd54d00c33a"},
 ]
 eagerx-reality = [
     {file = "eagerx_reality-0.1.5-py3-none-any.whl", hash = "sha256:b8890b054216d5ddffe3ed301f4a4b43ac6e695454f4173f5c04cbbaf9e1e958"},
