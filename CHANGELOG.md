@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.1.9 (2022-04-26)
+### Fix
+* Refactor `is_reactive` to `sync`. ([`c94a9cd`](https://github.com/eager-dev/eagerx_dcsc_setups/commit/c94a9cd7491259673fd1924e8687d7d566421ac3))
+
 ## v0.1.8 (2022-04-19)
 ### Fix
 * Bump eagerx, eagerx_ode and update render for ode accordingly ([`11121c2`](https://github.com/eager-dev/eagerx_dcsc_setups/commit/11121c21d844fd8fa5dc4b06144f271b98c9ca19))
