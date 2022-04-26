@@ -194,7 +194,7 @@ termcolor = ">=1.1.0,<2.0.0"
 
 [[package]]
 name = "eagerx-gui"
-version = "0.2.0"
+version = "0.2.1"
 description = "GUI to visualise graphs in EAGERx."
 category = "main"
 optional = false
@@ -1209,8 +1209,8 @@ eagerx = [
     {file = "eagerx-0.1.16.tar.gz", hash = "sha256:66fdd4104a1dce78d83c09f10215e788d713dd23b658b49f8367e34db33363db"},
 ]
 eagerx-gui = [
-    {file = "eagerx_gui-0.2.0-py3-none-any.whl", hash = "sha256:5edab504d8bd4366981dd3c4a173ce9e3ebf6d0d8cfe9fea1ddbe7761c60a74d"},
-    {file = "eagerx_gui-0.2.0.tar.gz", hash = "sha256:0f52efce9b4df0cbc2d9fa9e718c664f6076920f1d10c8d3dd8a863728d2e909"},
+    {file = "eagerx_gui-0.2.1-py3-none-any.whl", hash = "sha256:30561d26c2d675a604a22856f9c662b0968e2b5d778e4757b7b8df383a4850dd"},
+    {file = "eagerx_gui-0.2.1.tar.gz", hash = "sha256:016b453d0f52f8ce1e395952188f799800ae5615f318b2803a37ac07b7b25ec9"},
 ]
 eagerx-ode = [
     {file = "eagerx_ode-0.1.7-py3-none-any.whl", hash = "sha256:f2a78c8b5eff88abfdea756b733785e461fca9cde7c5d97f9eb6b5a23a35cc7e"},
