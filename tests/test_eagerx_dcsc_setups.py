@@ -22,15 +22,15 @@ ENV = process.ENVIRONMENT
 
 
 @pytest.mark.parametrize(
-    "eps, steps, is_reactive, rtf, p",
+    "eps, steps, sync, rtf, p",
     [(3, 3, True, 0, ENV)],
 )
-def test_pendulum_ode(eps, steps, is_reactive, rtf, p):
+def test_pendulum_ode(eps, steps, sync, rtf, p):
     # Start roscore
     roscore = initialize("eagerx_core", anonymous=True, log_level=log.WARN)
 
     # Define unique name for test environment
-    name = f"{eps}_{steps}_{is_reactive}_{p}"
+    name = f"{eps}_{steps}_{sync}_{p}"
     bridge_p = p
     rate = 30
 
@@ -56,13 +56,7 @@ def test_pendulum_ode(eps, steps, is_reactive, rtf, p):
     )
 
     # Define bridges
-    bridge = Bridge.make(
-        "OdeBridge",
-        rate=rate,
-        is_reactive=is_reactive,
-        real_time_factor=rtf,
-        process=bridge_p,
-    )
+    bridge = Bridge.make("OdeBridge", rate=rate, sync=sync, real_time_factor=rtf, process=bridge_p)
 
     # Define step function
     def step_fn(prev_obs, obs, action, steps):
