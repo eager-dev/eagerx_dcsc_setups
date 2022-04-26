@@ -67,13 +67,7 @@ if __name__ == "__main__":
     graph.gui()
 
     # Define bridges
-    bridge = Bridge.make(
-        "OdeBridge",
-        rate=rate,
-        is_reactive=True,
-        real_time_factor=0,
-        process=process.NEW_PROCESS,
-    )
+    bridge = Bridge.make("OdeBridge", rate=rate, sync=True, real_time_factor=0, process=process.NEW_PROCESS)
 
     # Define step function
     def step_fn(prev_obs, obs, action, steps):
