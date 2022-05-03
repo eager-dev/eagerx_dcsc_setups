@@ -194,14 +194,14 @@ termcolor = ">=1.1.0,<2.0.0"
 
 [[package]]
 name = "eagerx-gui"
-version = "0.2.1"
+version = "0.2.3"
 description = "GUI to visualise graphs in EAGERx."
 category = "main"
 optional = false
 python-versions = ">=3.8,<4.0"
 
 [package.dependencies]
-eagerx = ">=0.1.14,<0.2.0"
+eagerx = ">=0.1.17,<0.2.0"
 opencv-python = ">=4.5,<5.0"
 PyQt6 = ">=6.2.3,<7.0.0"
 pyqtgraph = ">=0.12.4,<0.13.0"
@@ -1213,8 +1213,8 @@ eagerx = [
     {file = "eagerx-0.1.17.tar.gz", hash = "sha256:38d9eaaf0079948ce1ed09f8628c1b3947c23f2926d8f7616c40f42e1364b5d9"},
 ]
 eagerx-gui = [
-    {file = "eagerx_gui-0.2.1-py3-none-any.whl", hash = "sha256:30561d26c2d675a604a22856f9c662b0968e2b5d778e4757b7b8df383a4850dd"},
-    {file = "eagerx_gui-0.2.1.tar.gz", hash = "sha256:016b453d0f52f8ce1e395952188f799800ae5615f318b2803a37ac07b7b25ec9"},
+    {file = "eagerx_gui-0.2.3-py3-none-any.whl", hash = "sha256:cf5f598ebeda24198df5bf1edb3ecb1f7c1b5508674737cb2e81918b98019dad"},
+    {file = "eagerx_gui-0.2.3.tar.gz", hash = "sha256:8ffd853a99e9f30023da66d60b88f7de0abdce3977cd2a37fc93bef8f1829fbd"},
 ]
 eagerx-ode = [
     {file = "eagerx_ode-0.1.11-py3-none-any.whl", hash = "sha256:a63eabe6f92ded4e7459c07a7abe726890d992d395039f48e7bd7fda1c14da86"},
