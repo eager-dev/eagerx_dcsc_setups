@@ -15,18 +15,23 @@ class Pendulum(Object):
     entity_id = "Pendulum"
 
     @staticmethod
-    @register.sensors(pendulum_output=Float32MultiArray, action_applied=Float32MultiArray, image=Image)
-    @register.actuators(pendulum_input=Float32MultiArray)
+    @register.sensors(x=Float32MultiArray, action_applied=Float32MultiArray, image=Image)
+    @register.actuators(u=Float32MultiArray)
     @register.engine_states(model_state=Float32MultiArray, model_parameters=Float32MultiArray)
-    @register.config(always_render=False, render_shape=[480, 480], camera_index=0)
+    @register.config(
+        always_render=False,
+        render_shape=[480, 480],
+        camera_index=0,
+        Dfun="eagerx_dcsc_setups.pendulum.ode.pendulum_ode/pendulum_dfun",
+    )
     def agnostic(spec: ObjectSpec, rate):
         """Agnostic definition of the Pendulum"""
         # Register standard converters, space_converters, and processors
         import eagerx.converters  # noqa # pylint: disable=unused-import
 
         # Set observation properties: (space_converters, rate, etc...)
-        spec.sensors.pendulum_output.rate = rate
-        spec.sensors.pendulum_output.space_converter = SpaceConverter.make(
+        spec.sensors.x.rate = rate
+        spec.sensors.x.space_converter = SpaceConverter.make(
             "Space_AngleDecomposition", low=[-1, -1, -9], high=[1, 1, 9], dtype="float32"
         )
 
@@ -41,18 +46,16 @@ class Pendulum(Object):
         )
 
         # Set actuator properties: (space_converters, rate, etc...)
-        spec.actuators.pendulum_input.rate = rate
-        spec.actuators.pendulum_input.window = 1
-        spec.actuators.pendulum_input.space_converter = SpaceConverter.make(
-            "Space_Float32MultiArray", low=[-3], high=[3], dtype="float32"
-        )
+        spec.actuators.u.rate = rate
+        spec.actuators.u.window = 1
+        spec.actuators.u.space_converter = SpaceConverter.make("Space_Float32MultiArray", low=[-3], high=[3], dtype="float32")
 
         # Set model_state properties: (space_converters)
         spec.states.model_state.space_converter = SpaceConverter.make(
             "Space_Float32MultiArray", low=[-3.14159265359, -9], high=[3.14159265359, 9], dtype="float32"
         )
 
-        # Set model_parameters properties: (space_converters) # [J, m, l, b0, K, R, c, a]
+        # Set model_parameters properties: (space_converters) # [J, m, l, b, K, R, c, d]
         fixed = [0.000189238, 0.0563641, 0.0437891, 0.000142205, 0.0502769, 9.83536, 1.49553, 0.00183742]
         diff = [0, 0, 0, 0.08, 0.08, 0.08, 0.08]  # Percentual delta with respect to fixed value
         low = [val - diff * val for val, diff in zip(fixed, diff)]
@@ -66,7 +69,15 @@ class Pendulum(Object):
     @staticmethod
     @register.spec(entity_id, Object)
     def spec(
-        spec: ObjectSpec, name: str, sensors=None, states=None, rate=30, always_render=False, render_shape=None, camera_index=2
+        spec: ObjectSpec,
+        name: str,
+        sensors=None,
+        states=None,
+        rate=30,
+        always_render=False,
+        render_shape=None,
+        camera_index=2,
+        Dfun="eagerx_dcsc_setups.pendulum.ode.pendulum_ode/pendulum_dfun",
     ):
         """Object spec of Pendulum"""
         # Performs all the steps to fill-in the params with registered info about all functions.
@@ -75,14 +86,15 @@ class Pendulum(Object):
         # Modify default agnostic params
         # Only allow changes to the agnostic params (rates, windows, (space)converters, etc...
         spec.config.name = name
-        spec.config.sensors = sensors if sensors else ["pendulum_output", "action_applied", "image"]
-        spec.config.actuators = ["pendulum_input"]
+        spec.config.sensors = sensors if sensors else ["x", "action_applied", "image"]
+        spec.config.actuators = ["u"]
         spec.config.states = states if states else ["model_state"]
 
         # Add registered agnostic params
         spec.config.always_render = always_render
         spec.config.render_shape = render_shape if render_shape else [480, 480]
         spec.config.camera_index = camera_index
+        spec.config.Dfun = Dfun
 
         # Add bridge implementation
         Pendulum.agnostic(spec, rate)
@@ -96,7 +108,9 @@ class Pendulum(Object):
 
         # Set object arguments (nothing to set here in this case)
         spec.OdeBridge.ode = "eagerx_dcsc_setups.pendulum.ode.pendulum_ode/pendulum_ode"
-        # Set default params of pendulum ode [J, m, l, b0, K, R, c, a].
+        spec.OdeBridge.Dfun = spec.config.Dfun
+
+        # Set default params of pendulum ode [J, m, l, b, K, R, c, d].
         spec.OdeBridge.ode_params = [0.000189238, 0.0563641, 0.0437891, 0.000142205, 0.0502769, 9.83536, 1.49553, 0.00183742]
 
         # Create engine_states (no agnostic states defined in this case)
@@ -104,7 +118,7 @@ class Pendulum(Object):
         spec.OdeBridge.states.model_parameters = EngineState.make("OdeParameters", list(range(7)))
 
         # Create sensor engine nodes
-        obs = EngineNode.make("OdeOutput", "pendulum_output", rate=spec.sensors.pendulum_output.rate, process=2)
+        obs = EngineNode.make("OdeOutput", "x", rate=spec.sensors.x.rate, process=2)
         image = EngineNode.make(
             "OdeRender",
             "image",
@@ -115,17 +129,15 @@ class Pendulum(Object):
         )
 
         # Create actuator engine nodes
-        action = EngineNode.make(
-            "OdeInput", "pendulum_actuator", rate=spec.actuators.pendulum_input.rate, process=2, default_action=[0]
-        )
+        action = EngineNode.make("OdeInput", "pendulum_actuator", rate=spec.actuators.u.rate, process=2, default_action=[0])
 
         # Connect all engine nodes
         graph.add([obs, image, action])
-        graph.connect(source=obs.outputs.observation, sensor="pendulum_output")
+        graph.connect(source=obs.outputs.observation, sensor="x")
         graph.connect(source=obs.outputs.observation, target=image.inputs.observation)
         graph.connect(source=image.outputs.image, sensor="image")
         graph.connect(source=action.outputs.action_applied, target=image.inputs.action_applied, skip=True)
-        graph.connect(actuator="pendulum_input", target=action.inputs.action)
+        graph.connect(actuator="u", target=action.inputs.action)
 
         # Add action applied
         applied = EngineNode.make("ActionApplied", "applied", rate=spec.sensors.action_applied.rate, process=2)
@@ -148,7 +160,7 @@ class Pendulum(Object):
 
         # Create sensor engine nodes
         # Rate=None, because we will connect them to sensors (thus uses the rate set in the agnostic specification)
-        obs = EngineNode.make("PendulumOutput", "pendulum_output", rate=spec.sensors.pendulum_output.rate, process=0)
+        obs = EngineNode.make("PendulumOutput", "x", rate=spec.sensors.x.rate, process=0)
         applied = EngineNode.make("ActionApplied", "applied", rate=spec.sensors.action_applied.rate, process=0)
         image = EngineNode.make(
             "CameraRender",
@@ -161,15 +173,15 @@ class Pendulum(Object):
 
         # Create actuator engine nodes
         # Rate=None, because we will connect it to an actuator (thus uses the rate set in the agnostic specification)
-        action = EngineNode.make("PendulumInput", "pendulum_input", rate=spec.actuators.pendulum_input.rate, process=0)
+        action = EngineNode.make("PendulumInput", "u", rate=spec.actuators.u.rate, process=0)
 
         # Connect all engine nodes
         graph.add([obs, applied, image, action])
-        graph.connect(source=obs.outputs.pendulum_output, sensor="pendulum_output")
+        graph.connect(source=obs.outputs.x, sensor="x")
         graph.connect(source=action.outputs.action_applied, target=applied.inputs.action_applied, skip=True)
         graph.connect(source=applied.outputs.action_applied, sensor="action_applied")
         graph.connect(source=image.outputs.image, sensor="image")
-        graph.connect(actuator="pendulum_input", target=action.inputs.pendulum_input)
+        graph.connect(actuator="u", target=action.inputs.u)
 
         # Check graph validity (commented out)
         # graph.is_valid(plot=True)
