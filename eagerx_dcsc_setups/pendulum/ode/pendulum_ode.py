@@ -18,7 +18,7 @@ def sigmoid_d(x):
 def pendulum_ode(x, t, u, J, m, l, b, K, R, c, d):
     g = 9.81
 
-    ddx = (u * K / R - m * g * l * sin(x[0]) - b * x[1] - x[1] * K * K / R - c * (2 * sigmoid(d * x[1]) - 1)) / J
+    ddx = (u * K / R + m * g * l * sin(x[0]) - b * x[1] - x[1] * K * K / R - c * (2 * sigmoid(d * x[1]) - 1)) / J
 
     return [x[1], ddx]
 
@@ -26,4 +26,4 @@ def pendulum_ode(x, t, u, J, m, l, b, K, R, c, d):
 def pendulum_dfun(x, t, u, J, m, l, b, K, R, c, d):
     g = 9.81
 
-    return [[0, 1], [-m * g * l * cos(x[0]) / J, (-b - K * K / R - 2 * c * d * sigmoid_d(d * x[1])) / J]]
+    return [[0, 1], [m * g * l * cos(x[0]) / J, (-b - K * K / R - 2 * c * d * sigmoid_d(d * x[1])) / J]]
