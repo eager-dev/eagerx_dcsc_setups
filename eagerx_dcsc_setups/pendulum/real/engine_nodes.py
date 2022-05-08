@@ -2,6 +2,7 @@ from typing import Optional
 import numpy as np
 import rospy
 from time import time, sleep
+from threading import Thread
 
 # IMPORT ROS
 from std_msgs.msg import UInt64, Float32MultiArray, Float32
@@ -50,81 +51,66 @@ class PendulumOutput(EngineNode):
 class PendulumInput(EngineNode):
     @staticmethod
     @register.spec("PendulumInput", EngineNode)
-    def spec(spec, name: str, rate: float, process: Optional[int] = process.NEW_PROCESS, color: Optional[str] = "green"):
+    def spec(spec, name: str, rate: float, fixed_delay: float = 0.0, process: Optional[int] = process.NEW_PROCESS, color: Optional[str] = "green"):
         """PendulumInput spec"""
         # Performs all the steps to fill-in the params with registered info about all functions.
         spec.initialize(PendulumInput)
 
         # Modify default node params
-        params = dict(
-            name=name, rate=rate, process=process, color=color, inputs=["tick", "u", "x"], outputs=["action_applied"]
-        )
-        spec.config.update(params)
+        spec.config.update(name=name, rate=rate, process=process, color=color, inputs=["tick", "u", "x"], outputs=["action_applied"])
+        spec.config.fixed_delay = fixed_delay
 
         # Set component parameter
         spec.inputs.u.window = 1
 
-    def initialize(self):
-        self.pub = rospy.Publisher("delay", Float32, queue_size=1)
+    def initialize(self,  fixed_delay: float):
+        assert fixed_delay >= 0, "Delay must be non-negative."
+        self.fixed_delay = fixed_delay
+        self.pub_act = rospy.Publisher("/mops/actuator_delay", Float32, queue_size=1)
+        self.pub_comp = rospy.Publisher("/mops/computation_delay", Float32, queue_size=1)
         self.service = rospy.ServiceProxy("/mops/write", MopsWrite)
         self.service.wait_for_service()
+        self.prev_seq = None
 
     @register.states()
     def reset(self):
-        pass
+        self.prev_seq = None
 
     @register.inputs(tick=UInt64, u=Float32MultiArray, x=Float32MultiArray)
     @register.outputs(action_applied=Float32MultiArray)
     def callback(self, t_n: float, tick: Optional[Msg] = None, u: Optional[Msg] = None, x: Optional[Msg] = None):
-        # Check if delay is constant
-        delay = u.info.t_in[-1].wc_stamp - x.info.t_in[-1].wc_stamp
-        self.pub.publish(Float32(data=delay))
-        if len(u.msgs) > 0:
-            input = np.squeeze(u.msgs[-1].data)
-            if input is not None:
-                req = MopsWriteRequest()
-                req.actuators.digital_outputs = 1
-                req.actuators.voltage0 = input
-                req.actuators.voltage1 = 0.0
-                req.actuators.timeout = 0.5
-                self.service(req)
-            # Send action that has been applied.
-        else:
-            input = 0
-        return dict(action_applied=Float32MultiArray(data=[input]))
+        if self.prev_seq is not None and self.prev_seq == u.info.t_in[-1].seq:
+            # We do not want to apply the same action more than once
+            return dict(action_applied=u.msgs[-1])
+        self.prev_seq = u.info.t_in[-1].seq
 
-class ConstantDelayAction(EngineNode):
-    @staticmethod
-    @register.spec("ConstantDelayAction", EngineNode)
-    def spec(spec, name: str, rate: float, desired_delay: float, process: Optional[int] = process.NEW_PROCESS, color: Optional[str] = "green"):
-        """DelayAction spec"""
-        # Performs all the steps to fill-in the params with registered info about all functions.
-        spec.initialize(ConstantDelayAction)
+        # Create request
+        input = np.squeeze(u.msgs[-1].data)
+        req = MopsWriteRequest()
+        req.actuators.digital_outputs = 1
+        req.actuators.voltage0 = input
+        req.actuators.voltage1 = 0.0
+        req.actuators.timeout = 0.5
 
-        # Modify default node params
-        params = dict(
-            name=name, rate=rate, process=process, color=color, inputs=["observation", "action"], outputs=["delayed_action"]
-        )
-        spec.config.update(params)
+        # Determine sleep duration to achieve fixed delay.
+        obs_ts = x.info.t_in[-1].wc_stamp
+        act_ts = u.info.t_in[-1].wc_stamp
+        dt = act_ts - obs_ts
+        sleep_duration = self.fixed_delay - dt
 
-        # Custom params
-        spec.config.desired_delay = desired_delay
+        # Call srvs asynchronously
+        thread = Thread(target=self._async_srvs_call, args=(req, sleep_duration, obs_ts, dt))
+        thread.start()
+        return dict(action_applied=u.msgs[-1])
 
-    def initialize(self, desired_delay):
-        self.desired_delay = desired_delay
+    def _async_srvs_call(self, req, sleep_duration, obs_ts, dt):
+        """Asynchronously sleep to implement the fixed delay followed by the srvs call."""
+        sleep(max(sleep_duration, 0))
+        delay = time() - obs_ts
+        self.service(req)
 
-    @register.states()
-    def reset(self):
-        pass
+        # Publish actual delay
+        self.pub_act.publish(Float32(data=delay))
+        self.pub_comp.publish(Float32(data=dt))
 
-    @register.inputs(observation=Float32MultiArray, action=Float32MultiArray)
-    @register.outputs(delayed_action=Float32MultiArray)
-    def callback(self, t_n: float, observation: Optional[Msg] = None, action: Optional[Msg] = None):
-        t_in = observation.info.t_in[-1].wc_stamp
-        sleep_duration = t_in + self.desired_delay - time()
-        # rospy.loginfo("Desired delay: " + str(self.desired_delay) + ", sleep_duration: " + str(sleep_duration))
-        if sleep_duration > 0:
-            sleep(sleep_duration)
-        else:
-            rospy.logwarn("[DelayAction] Delay is already larger than desired delay.")
-        return dict(delayed_action=action.msgs[-1])
+

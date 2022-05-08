@@ -52,12 +52,8 @@ if __name__ == "__main__":
     # Connect the nodes
     graph.connect(action="action", target=bf.inputs.signal)
     graph.connect(source=bf.outputs.filtered, target=pendulum.actuators.pendulum_input)
-    graph.connect(
-        source=pendulum.sensors.pendulum_output, observation="observation", window=1
-    )
-    graph.connect(
-        source=pendulum.sensors.action_applied, observation="action_applied", window=1
-    )
+    graph.connect(source=pendulum.sensors.pendulum_output, observation="observation", window=1)
+    graph.connect(source=pendulum.sensors.action_applied, observation="action_applied", window=1)
 
     # Add rendering
     graph.add_component(pendulum.sensors.image)
@@ -83,9 +79,7 @@ if __name__ == "__main__":
         return obs, -cost, done, info
 
     # Initialize Environment
-    env = Flatten(
-        EagerxEnv(name="rx", rate=rate, graph=graph, bridge=bridge, step_fn=step_fn)
-    )
+    env = Flatten(EagerxEnv(name="rx", rate=rate, graph=graph, bridge=bridge, step_fn=step_fn))
 
     # Initialize learner (kudos to Antonin)
     model = sb.SAC("MlpPolicy", env, verbose=1, device="cpu")

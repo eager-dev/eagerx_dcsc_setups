@@ -41,7 +41,7 @@ def test_pendulum_ode(eps, steps, sync, rtf, p):
     pendulum = Object.make(
         "Pendulum",
         "pendulum",
-        sensors=["x", "action_applied"],
+        sensors=["x"],
         states=["model_state", "model_parameters"],
     )
     graph.add(pendulum)
@@ -49,7 +49,6 @@ def test_pendulum_ode(eps, steps, sync, rtf, p):
     # Connect the nodes
     graph.connect(action="action", target=pendulum.actuators.u)
     graph.connect(source=pendulum.sensors.x, observation="observation", window=1)
-    graph.connect(source=pendulum.sensors.action_applied, observation="action_applied", window=1)
 
     # Define bridges
     bridge = Bridge.make("OdeBridge", rate=rate, sync=sync, real_time_factor=rtf, process=bridge_p)
@@ -128,12 +127,10 @@ def test_dfun(eps, steps, sync, rtf, p):
     # Connect the nodes
     graph.connect(action="action", target=pendulum.actuators.u)
     graph.connect(source=pendulum.sensors.x, observation="observation", window=1)
-    graph.connect(source=pendulum.sensors.action_applied, observation="action_applied", window=1)
     graph.render(pendulum.sensors.image, rate=10)
 
     graph2.connect(action="action", target=pendulum2.actuators.u)
     graph2.connect(source=pendulum2.sensors.x, observation="observation", window=1)
-    graph2.connect(source=pendulum2.sensors.action_applied, observation="action_applied", window=1)
     graph2.render(pendulum2.sensors.image, rate=10)
 
     # Define bridges

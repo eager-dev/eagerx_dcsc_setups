@@ -51,9 +51,7 @@ if __name__ == "__main__":
         return obs, -cost, done, info
 
     # Initialize Environment
-    env = Flatten(
-        EagerxEnv(name="rx", rate=rate, graph=graph, bridge=bridge, step_fn=step_fn)
-    )
+    env = Flatten(EagerxEnv(name="rx", rate=rate, graph=graph, bridge=bridge, step_fn=step_fn))
     env.render("human")
 
     # Initialize learner (kudos to Antonin)
