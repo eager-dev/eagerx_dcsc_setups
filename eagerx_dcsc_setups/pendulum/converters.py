@@ -16,8 +16,6 @@ class Space_AngleDecomposition(SpaceConverter):
     @staticmethod
     @register.spec("Space_AngleDecomposition", SpaceConverter)
     def spec(spec: ConverterSpec, low=None, high=None, dtype="float32"):
-        # Initialize spec with default arguments
-        spec.initialize(Space_AngleDecomposition)
         params = dict(low=low, high=high, dtype=dtype)
         spec.config.update(params)
 

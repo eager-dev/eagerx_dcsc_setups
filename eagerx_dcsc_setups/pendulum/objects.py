@@ -69,9 +69,6 @@ class Pendulum(Object):
         spec: ObjectSpec, name: str, sensors=None, states=None, rate=30, always_render=False, render_shape=None, camera_index=2
     ):
         """Object spec of Pendulum"""
-        # Performs all the steps to fill-in the params with registered info about all functions.
-        Pendulum.initialize_spec(spec)
-
         # Modify default agnostic params
         # Only allow changes to the agnostic params (rates, windows, (space)converters, etc...
         spec.config.name = name
