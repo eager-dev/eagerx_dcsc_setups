@@ -17,7 +17,7 @@ if __name__ == "__main__":
     sensor_rate = 30.
     actuator_rate = 90.
     image_rate = sensor_rate / 2
-    bridge_rate = max([sensor_rate, actuator_rate, image_rate])
+    engine_rate = max([sensor_rate, actuator_rate, image_rate])
     delay = 0.025
     seed = 27
     np.random.seed(seed)
@@ -37,9 +37,9 @@ if __name__ == "__main__":
     }
 
     if mode == "sim":
-        simulate(image_rate, sensor_rate=sensor_rate, actuator_rate=actuator_rate, bridge_rate=bridge_rate, delay=delay,
+        simulate(image_rate, sensor_rate=sensor_rate, actuator_rate=actuator_rate, engine_rate=engine_rate, delay=delay,
                  seed=seed, length_train_eps=length_train_eps, length_eval_eps=length_eval_eps, train_eps=train_eps,
                  eval_eps=eval_eps, repetitions=repetitions, envs=envs)
     elif mode == "real":
-        evaluate_real(sensor_rate=sensor_rate, bridge_rate=bridge_rate, delay=delay, seed=seed, length_eval_eps=length_eval_eps,
+        evaluate_real(sensor_rate=sensor_rate, engine_rate=engine_rate, delay=delay, seed=seed, length_eval_eps=length_eval_eps,
                       eval_eps=eval_eps, repetitions=repetitions, envs=envs, log_name=load_log)

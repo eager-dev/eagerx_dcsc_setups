@@ -1,5 +1,5 @@
 # ROS packages required
-from eagerx import Bridge, process
+from eagerx import Engine, process
 
 # Environment
 from eagerx.core.env import EagerxEnv
@@ -7,7 +7,7 @@ from eagerx.wrappers import Flatten
 
 # Implementation specific
 import eagerx.nodes  # Registers butterworth_filter # noqa # pylint: disable=unused-import
-import eagerx_ode  # Registers OdeBridge # noqa # pylint: disable=unused-import
+import eagerx_ode  # Registers OdeEngine # noqa # pylint: disable=unused-import
 import eagerx_dcsc_setups.pendulum  # Registers Pendulum # noqa # pylint: disable=unused-import
 
 # Other
@@ -19,7 +19,7 @@ from datetime import datetime
 import os
 
 def simulate(
-        image_rate, sensor_rate, actuator_rate, bridge_rate, delay, seed, length_train_eps, length_eval_eps, train_eps, eval_eps, repetitions, envs,
+        image_rate, sensor_rate, actuator_rate, engine_rate, delay, seed, length_train_eps, length_eval_eps, train_eps, eval_eps, repetitions, envs,
 ):
 
     NAME = "pendulum"
@@ -31,8 +31,8 @@ def simulate(
     train_step_fn = partial(util.step_fn, length_eps=length_train_eps)
     eval_step_fn = partial(util.step_fn, length_eps=length_eval_eps)
 
-    # Define bridges
-    bridge_ode = Bridge.make("OdeBridge", rate=bridge_rate, sync=True, real_time_factor=0, process=process.NEW_PROCESS)
+    # Define engines
+    engine_ode = Engine.make("OdeEngine", rate=engine_rate, sync=True, real_time_factor=0, process=process.NEW_PROCESS)
 
     cumulative_rewards = {}
     # Create Environments
@@ -48,7 +48,7 @@ def simulate(
         train_delay = delay if params["emmd"] else None
         train_reset_fn = partial(util.train_reset_fn, train_delay=train_delay)
         train_env = Flatten(EagerxEnv(
-            name=name + "_train_env", rate=sensor_rate, graph=train_graph, bridge=bridge_ode, step_fn=train_step_fn, reset_fn=train_reset_fn,
+            name=name + "_train_env", rate=sensor_rate, graph=train_graph, engine=engine_ode, step_fn=train_step_fn, reset_fn=train_reset_fn,
         ))
         train_env.seed(seed)
         envs[name]["train_env"] = train_env
@@ -59,7 +59,7 @@ def simulate(
         eval_delay = delay if params["emmd"] else None
         eval_reset_fn = partial(util.eval_reset_fn, eval_delay=eval_delay)
         eval_env = Flatten(EagerxEnv(
-            name=name + "_eval_env", rate=sensor_rate, graph=eval_graph, bridge=bridge_ode, step_fn=eval_step_fn, reset_fn=eval_reset_fn,
+            name=name + "_eval_env", rate=sensor_rate, graph=eval_graph, engine=engine_ode, step_fn=eval_step_fn, reset_fn=eval_reset_fn,
         ))
         eval_env.seed(seed)
         envs[name]["eval_env"] = eval_env

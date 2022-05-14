@@ -106,7 +106,7 @@ class Pendulum(Object):
         spec.config.Dfun = Dfun
         spec.config.fixed_delay = fixed_delay
 
-        # Add bridge implementation
+        # Add engine implementation
         Pendulum.agnostic(spec, rate)
 
     @staticmethod
@@ -121,7 +121,7 @@ class Pendulum(Object):
         spec.OdeEngine.Dfun = spec.config.Dfun
 
         # Set default params of pendulum ode [J, m, l, b, K, R, c, d].
-        spec.OdeBridge.ode_params = [
+        spec.OdeEngine.ode_params = [
             0.000159931461600856,
             0.75 * 0.0508581731919534,
             0.0415233722862552,

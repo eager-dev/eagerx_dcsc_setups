@@ -38,7 +38,7 @@ class CustomOdeInput(eagerx.EngineNode):
         # We will probably use self.simulator[self.obj_name] in callback & reset.
         assert (
                 self.process == eagerx.process.BRIDGE
-        ), "Simulation node requires a reference to the simulator, hence it must be launched in the Bridge process"
+        ), "Simulation node requires a reference to the simulator, hence it must be launched in the Engine process"
         self.obj_name = self.config["name"]
         self.default_action = np.array(default_action)
 

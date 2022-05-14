@@ -71,7 +71,7 @@ def test_pendulum_ode(eps, steps, sync, rtf, p):
         return obs, -cost, done, info
 
     # Initialize Environment
-    env = Flatten(EagerxEnv(name=name, rate=rate, graph=graph, bridge=bridge, step_fn=step_fn))
+    env = Flatten(EagerxEnv(name=name, rate=rate, graph=graph, engine=engine, step_fn=step_fn))
 
     # First reset
     env.reset()
@@ -110,7 +110,7 @@ def test_dfun(eps, steps, sync, rtf, p):
 
     # Define unique name for test environment
     name = f"{eps}_{steps}_{sync}_{p}"
-    bridge_p = p
+    engine_p = p
     rate = 30
 
     # Initialize empty graphs
@@ -133,13 +133,13 @@ def test_dfun(eps, steps, sync, rtf, p):
     graph2.connect(source=pendulum2.sensors.x, observation="observation", window=1)
     graph2.render(pendulum2.sensors.image, rate=10)
 
-    # Define bridges
+    # Define engines
     engine = Engine.make(
         "OdeEngine",
         rate=rate,
         sync=sync,
         real_time_factor=rtf,
-        process=bridge_p,
+        process=engine_p,
     )
 
     # Define step function

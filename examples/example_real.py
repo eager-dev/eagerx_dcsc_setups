@@ -74,8 +74,8 @@ if __name__ == "__main__":
     graph.render(source=pendulum.sensors.image, rate=15, display=True)
 
     # Show in the gui
-    # pendulum.gui("OdeBridge")
-    # pendulum.gui("RealBridge")
+    # pendulum.gui("OdeEngine")
+    # pendulum.gui("RealEngine")
     # graph.gui()
 
     # Define engines

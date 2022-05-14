@@ -1,5 +1,5 @@
 # ROS packages required
-from eagerx import Bridge, process, Graph
+from eagerx import Engine, process, Graph
 
 # Environment
 from eagerx.core.env import EagerxEnv
@@ -7,7 +7,7 @@ from eagerx.wrappers import Flatten
 
 # Implementation specific
 import eagerx.nodes  # Registers butterworth_filter # noqa # pylint: disable=unused-import
-import eagerx_reality  # Registers RealBridge # noqa # pylint: disable=unused-import
+import eagerx_reality  # Registers RealEngine # noqa # pylint: disable=unused-import
 import eagerx_dcsc_setups.pendulum  # Registers Pendulum # noqa # pylint: disable=unused-import
 
 # Other
@@ -19,7 +19,7 @@ import os
 
 
 def evaluate_real(
-        sensor_rate, bridge_rate, delay, seed, length_eval_eps, eval_eps,
+        sensor_rate, engine_rate, delay, seed, length_eval_eps, eval_eps,
         repetitions, envs, log_name,
 ):
     NAME = "sim"
@@ -28,8 +28,8 @@ def evaluate_real(
     step_fn = partial(util.step_fn, length_eps=length_eval_eps)
     eval_reset_fn = partial(util.eval_reset_fn, eval_delay=None)
 
-    # Define bridges
-    bridge_real = Bridge.make("RealBridge", rate=bridge_rate, sync=True, process=process.NEW_PROCESS)
+    # Define engines
+    engine_real = Engine.make("RealEngine", rate=engine_rate, sync=True, process=process.NEW_PROCESS)
 
     cumulative_rewards = {}
     # Create Environments
@@ -44,14 +44,14 @@ def evaluate_real(
         graph.load(f"{LOG_DIR}/graphs/{name}_eval.yaml")
 
         eval_env = Flatten(EagerxEnv(
-            name=name + "_eval_env", rate=sensor_rate, graph=graph, bridge=bridge_real, step_fn=step_fn,
+            name=name + "_eval_env", rate=sensor_rate, graph=graph, engine=engine_real, step_fn=step_fn,
             reset_fn=eval_reset_fn,
         ))
         eval_env.seed(seed)
         envs[name]["real"] = eval_env
 
         eval_env_delay = Flatten(EagerxEnv(
-            name=name + "_eval_env_delay", rate=sensor_rate, graph=graph, bridge=bridge_real, step_fn=step_fn,
+            name=name + "_eval_env_delay", rate=sensor_rate, graph=graph, engine=engine_real, step_fn=step_fn,
             reset_fn=eval_reset_fn,
         ))
         eval_env_delay.seed(seed)
