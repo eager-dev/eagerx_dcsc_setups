@@ -209,7 +209,7 @@ pyqtgraph = ">=0.12.4,<0.13.0"
 [[package]]
 name = "eagerx-ode"
 version = "0.1.11"
-description = "Bridge (with corresponding nodes) that uses arbitrary ODEs to simulate objects in EAGERx."
+description = "Engine (with corresponding nodes) that uses arbitrary ODEs to simulate objects in EAGERx."
 category = "main"
 optional = false
 python-versions = ">=3.6.2,<4.0.0"
@@ -221,7 +221,7 @@ scipy = ">=1.5.4,<2.0.0"
 [[package]]
 name = "eagerx-reality"
 version = "0.1.6"
-description = "Simple bridge that can be used in reality together with several useful nodes."
+description = "Simple engine that can be used in reality together with several useful nodes."
 category = "main"
 optional = false
 python-versions = ">=3.6.2,<4.0.0"

@@ -1,5 +1,5 @@
 # ROS packages required
-from eagerx import Object, Bridge, Node, initialize, log, process
+from eagerx import Object, Engine, Node, initialize, log, process
 
 initialize("eagerx_core", anonymous=True, log_level=log.INFO)
 
@@ -10,8 +10,8 @@ from eagerx.wrappers import Flatten
 
 # Implementation specific
 import eagerx.nodes  # Registers butterworth_filter # noqa # pylint: disable=unused-import
-import eagerx_ode  # Registers OdeBridge # noqa # pylint: disable=unused-import
-import eagerx_reality  # Registers RealBridge # noqa # pylint: disable=unused-import
+import eagerx_ode  # Registers OdeEngine # noqa # pylint: disable=unused-import
+import eagerx_reality  # Registers RealEngine # noqa # pylint: disable=unused-import
 import eagerx_dcsc_setups.pendulum  # Registers Pendulum # noqa # pylint: disable=unused-import
 
 # Other
@@ -64,9 +64,9 @@ if __name__ == "__main__":
     # Show in the gui
     # graph.gui()
 
-    # Define bridges
-    bridge_ode = Bridge.make('OdeBridge', rate=rate, sync=True, real_time_factor=0, process=process.NEW_PROCESS)
-    bridge_real = Bridge.make('RealBridge', rate=rate, sync=True, process=process.NEW_PROCESS)
+    # Define engines
+    engine_ode = Engine.make('OdeEngine', rate=rate, sync=True, real_time_factor=0, process=process.NEW_PROCESS)
+    engine_real = Engine.make('RealEngine', rate=rate, sync=True, process=process.NEW_PROCESS)
 
     # Define step function
     def step_fn(prev_obs, obs, action, steps):
@@ -84,12 +84,12 @@ if __name__ == "__main__":
     # Initialize Environment
     real_env = Flatten(
         EagerxEnv(
-            name="real", rate=rate, graph=graph, bridge=bridge_real, step_fn=step_fn
+            name="real", rate=rate, graph=graph, engine=engine_real, step_fn=step_fn
         )
     )
     simulation_env = Flatten(
         EagerxEnv(
-            name="ode", rate=rate, graph=graph, bridge=bridge_ode, step_fn=step_fn
+            name="ode", rate=rate, graph=graph, engine=engine_ode, step_fn=step_fn
         )
     )
 

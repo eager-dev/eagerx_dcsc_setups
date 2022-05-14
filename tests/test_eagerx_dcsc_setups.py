@@ -1,5 +1,5 @@
 # ROS packages required
-from eagerx import Object, Bridge, initialize, log, process
+from eagerx import Object, Engine, initialize, log, process
 
 # Environment
 from eagerx.core.env import EagerxEnv
@@ -8,7 +8,7 @@ from eagerx.wrappers import Flatten
 
 # Implementation specific
 import eagerx.nodes  # Registers butterworth_filter # noqa # pylint: disable=unused-import
-import eagerx_ode  # Registers OdeBridge # noqa # pylint: disable=unused-import
+import eagerx_ode  # Registers OdeEngine # noqa # pylint: disable=unused-import
 
 import eagerx_dcsc_setups  # Registers Pendulum # noqa # pylint: disable=unused-import
 
@@ -31,7 +31,7 @@ def test_pendulum_ode(eps, steps, sync, rtf, p):
 
     # Define unique name for test environment
     name = f"{eps}_{steps}_{sync}_{p}"
-    bridge_p = p
+    engine_p = p
     rate = 30
 
     # Initialize empty graph
@@ -55,8 +55,8 @@ def test_pendulum_ode(eps, steps, sync, rtf, p):
         source=pendulum.sensors.action_applied, observation="action_applied", window=1
     )
 
-    # Define bridges
-    bridge = Bridge.make("OdeBridge", rate=rate, sync=sync, real_time_factor=rtf, process=bridge_p)
+    # Define engines
+    engine = Engine.make("OdeEngine", rate=rate, sync=sync, real_time_factor=rtf, process=engine_p)
 
     # Define step function
     def step_fn(prev_obs, obs, action, steps):
@@ -77,7 +77,7 @@ def test_pendulum_ode(eps, steps, sync, rtf, p):
 
     # Initialize Environment
     env = Flatten(
-        EagerxEnv(name=name, rate=rate, graph=graph, bridge=bridge, step_fn=step_fn)
+        EagerxEnv(name=name, rate=rate, graph=graph, engine=engine, step_fn=step_fn)
     )
 
     # First reset
