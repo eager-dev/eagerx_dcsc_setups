@@ -28,3 +28,17 @@ class RandomActionAndSleep(EngineState):
             req.actuators.timeout = 0.5
             self.service(req)
             rospy.sleep(self.sleep_time)
+
+
+class DummyState(EngineState):
+    @staticmethod
+    @register.spec("Dummy", EngineState)
+    def spec(spec):
+        spec.initialize(DummyState)
+
+    def initialize(self):
+        pass
+
+    def reset(self, state, done):
+        pass
+
