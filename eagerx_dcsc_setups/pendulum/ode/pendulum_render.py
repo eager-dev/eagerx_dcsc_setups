@@ -32,33 +32,4 @@ def pendulum_render_fn(img, observation, action):
         (0, 0, 0),
         2,
     )
-
-    # Draw voltage
-    if len(action.msgs) > 0 and len(action.msgs[-1].data) > 0:
-        action = action.msgs[-1].data[0]
-        action = min(abs(action), 3) * action / abs(action)
-    else:
-        action = 0
-
-    # Put text
-    font = cv2.FONT_HERSHEY_SIMPLEX
-    text = "Applied Voltage"
-    text_size = cv2.getTextSize(text, font, 0.5, 2)[0]
-    text_x = int((width - text_size[0]) / 2)
-    text_y = int(text_size[1])
-    img = cv2.putText(img, text, (text_x, text_y), font, 0.5, (0, 0, 0))
-
-    # Draw grey bar
-    img = cv2.rectangle(
-        img,
-        (width // 2 - side_length * 4 // 10, height // 2 - side_length * 9 // 20),
-        (width // 2 + 4 * side_length // 10, height // 2 - 4 * side_length // 10),
-        (125, 125, 125),
-        -1,
-    )
-
-    # Fill black black bar proportional to the action that is applied
-    p1 = (width // 2, height // 2 - side_length * 9 // 20)
-    p2 = (width // 2 + int(side_length * action * 2 / 15), height // 2 - 4 * side_length // 10)
-    img = cv2.rectangle(img, p1, p2, (0, 0, 0), -1)
     return img

@@ -83,7 +83,7 @@ class Pendulum(Object):
         sensors=None,
         states=None,
         sensor_rate=30,
-        actuator_rate=300,
+        actuator_rate=90,
         image_rate=15,
         always_render=False,
         render_shape=None,
@@ -126,12 +126,12 @@ class Pendulum(Object):
         # Set default params of pendulum ode [J, m, l, b, K, R, c, d].
         spec.OdeBridge.ode_params = [
             0.000159931461600856,
-            0.75 * 0.0508581731919534,
+            0.0508581731919534,
             0.0415233722862552,
-            0.75 * 1.43298488358436e-05,
+            1.43298488358436e-05,
             0.0333391179016334,
             7.73125142447252,
-            0.75 * 0.000975041213361349,
+            0.000975041213361349,
             165.417960777425,
         ]
 
@@ -151,7 +151,9 @@ class Pendulum(Object):
         )
 
         # Create actuator engine nodes
-        action = EngineNode.make("CustomOdeInput", "pendulum_actuator", rate=spec.actuators.u.rate, process=2, default_action=[0])
+        action = EngineNode.make(
+            "CustomOdeInput", "pendulum_actuator", rate=spec.actuators.u.rate, process=2, default_action=[0]
+        )
 
         # Connect all engine nodes
         graph.add([obs, image, action])

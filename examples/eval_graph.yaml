@@ -1,0 +1,975 @@
+backup:
+  butterworth_filter:
+    config:
+      N: 2
+      Wn: 13
+      btype: lowpass
+      color: grey
+      entity_id: ButterworthFilter
+      executable: python:=eagerx.core.executable_node
+      inputs:
+      - signal
+      log_level: 30
+      log_level_memory: 0
+      name: butterworth_filter
+      outputs:
+      - filtered
+      print_mode: 1
+      process: 0
+      rate: 30.0
+      states: []
+    inputs:
+      signal:
+        address: null
+        converter:
+          converter_type: eagerx.converters.ros_processor/GetIndex_Float32MultiArray
+          index:
+          - 0
+        delay: 0.0
+        external_rate: null
+        msg_type: std_msgs.msg._Float32MultiArray/Float32MultiArray
+        skip: false
+        space_converter:
+          converter_type: eagerx.converters.space_ros_converters/Space_Float32MultiArray
+          dtype: float32
+          high:
+          - 2
+          initial_obs: null
+          low:
+          - -2
+        window: $(config N)
+    node_type: eagerx.nodes.butterworth_filter/ButterworthFilter
+    outputs:
+      filtered:
+        converter:
+          converter_type: eagerx.core.converters/Identity
+        msg_type: std_msgs.msg._Float32MultiArray/Float32MultiArray
+        rate: $(config rate)
+        space_converter:
+          converter_type: eagerx.converters.space_ros_converters/Space_Float32MultiArray
+          dtype: float32
+          high:
+          - 2
+          initial_obs: null
+          low:
+          - -2
+    states: {}
+  env/actions:
+    config:
+      color: yellow
+      entity_id: Actions
+      executable: python:=eagerx.core.executable_node
+      inputs:
+      - step
+      log_level: 30
+      log_level_memory: 0
+      name: env/actions
+      outputs:
+      - set
+      print_mode: 1
+      process: 1
+      rate: 1
+      states: []
+    inputs:
+      observations_set:
+        address: null
+        converter:
+          converter_type: eagerx.core.converters/Identity
+        delay: 0.0
+        external_rate: null
+        msg_type: std_msgs.msg._UInt64/UInt64
+        skip: false
+        space_converter: null
+        window: 1
+      step:
+        address: env/supervisor/outputs/step
+        converter:
+          converter_type: eagerx.core.converters/Identity
+        delay: 0.0
+        external_rate: null
+        msg_type: std_msgs.msg._UInt64/UInt64
+        skip: false
+        space_converter: null
+        window: 1
+    node_type: eagerx.core.nodes/ActionsNode
+    outputs:
+      set:
+        converter:
+          converter_type: eagerx.core.converters/Identity
+        msg_type: std_msgs.msg._UInt64/UInt64
+        rate: $(config rate)
+        space_converter: null
+    states: {}
+  env/observations:
+    config:
+      color: yellow
+      entity_id: Observations
+      executable: python:=eagerx.core.executable_node
+      inputs:
+      - actions_set
+      log_level: 30
+      log_level_memory: 0
+      name: env/observations
+      outputs:
+      - set
+      print_mode: 1
+      process: 1
+      rate: 1
+      states: []
+    inputs:
+      actions_set:
+        address: env/actions/outputs/set
+        converter:
+          converter_type: eagerx.core.converters/Identity
+        delay: 0.0
+        external_rate: null
+        msg_type: std_msgs.msg._UInt64/UInt64
+        skip: false
+        space_converter: null
+        window: 1
+    node_type: eagerx.core.nodes/ObservationsNode
+    outputs:
+      set:
+        converter:
+          converter_type: eagerx.core.converters/Identity
+        msg_type: std_msgs.msg._UInt64/UInt64
+        rate: $(config rate)
+        space_converter: null
+    states: {}
+  env/render:
+    config:
+      color: grey
+      display: true
+      entity_id: Render
+      executable: python:=eagerx.core.executable_node
+      inputs:
+      - image
+      log_level: 30
+      log_level_memory: 0
+      name: env/render
+      outputs:
+      - done
+      print_mode: 1
+      process: 0
+      rate: 15.0
+      states: []
+    inputs:
+      image:
+        address: null
+        converter:
+          converter_type: eagerx.core.converters/Identity
+        delay: 0.0
+        external_rate: null
+        msg_type: sensor_msgs.msg._Image/Image
+        skip: false
+        space_converter: null
+        window: 0
+    node_type: eagerx.core.nodes/RenderNode
+    outputs:
+      done:
+        converter:
+          converter_type: eagerx.core.converters/Identity
+        msg_type: std_msgs.msg._UInt64/UInt64
+        rate: $(config rate)
+        space_converter: null
+    states: {}
+  overlay:
+    config:
+      color: cyan
+      entity_id: Overlay
+      executable: python:=eagerx.core.executable_node
+      inputs:
+      - base_image
+      - u
+      - x
+      log_level: 30
+      log_level_memory: 0
+      name: overlay
+      outputs:
+      - image
+      print_mode: 1
+      process: 1
+      rate: 15.0
+      states: []
+    inputs:
+      base_image:
+        address: null
+        converter:
+          converter_type: eagerx.core.converters/Identity
+        delay: 0.0
+        external_rate: null
+        msg_type: sensor_msgs.msg._Image/Image
+        skip: false
+        space_converter: null
+        window: 1
+      u:
+        address: null
+        converter:
+          converter_type: eagerx.core.converters/Identity
+        delay: 0.0
+        external_rate: null
+        msg_type: std_msgs.msg._Float32MultiArray/Float32MultiArray
+        skip: false
+        space_converter: null
+        window: 1
+      x:
+        address: null
+        converter:
+          converter_type: eagerx.core.converters/Identity
+        delay: 0.0
+        external_rate: null
+        msg_type: std_msgs.msg._Float32MultiArray/Float32MultiArray
+        skip: false
+        space_converter: null
+        window: 1
+    node_type: eagerx_dcsc_setups.pendulum.overlay/Overlay
+    outputs:
+      image:
+        converter:
+          converter_type: eagerx.core.converters/Identity
+        msg_type: sensor_msgs.msg._Image/Image
+        rate: $(config rate)
+        space_converter: null
+    states: {}
+  pendulum:
+    actuators:
+      u:
+        converter:
+          converter_type: eagerx.core.converters/Identity
+        delay: 0.0
+        external_rate: null
+        msg_type: std_msgs.msg._Float32MultiArray/Float32MultiArray
+        rate: 90.0
+        skip: false
+        space_converter:
+          converter_type: eagerx.converters.space_ros_converters/Space_Float32MultiArray
+          dtype: float32
+          high:
+          - 2
+          initial_obs: null
+          low:
+          - -2
+        window: 1
+    config:
+      Dfun: eagerx_dcsc_setups.pendulum.ode.pendulum_ode/pendulum_dfun
+      actuators:
+      - u
+      always_render: false
+      camera_index: 2
+      entity_id: Pendulum
+      fixed_delay: 0.0
+      name: pendulum
+      render_shape:
+      - 480
+      - 480
+      sensors:
+      - x
+      states:
+      - model_state
+    entity_type: eagerx_dcsc_setups.pendulum.objects/Pendulum
+    sensors:
+      action_applied:
+        converter:
+          converter_type: eagerx.core.converters/Identity
+        msg_type: std_msgs.msg._Float32MultiArray/Float32MultiArray
+        rate: 30.0
+        space_converter:
+          converter_type: eagerx.converters.space_ros_converters/Space_Float32MultiArray
+          dtype: float32
+          high:
+          - 2
+          initial_obs: null
+          low:
+          - -2
+      image:
+        converter:
+          converter_type: eagerx.core.converters/Identity
+        msg_type: sensor_msgs.msg._Image/Image
+        rate: 15.0
+        space_converter:
+          converter_type: eagerx.converters.space_ros_converters/Space_Image
+          dtype: float32
+          high: 1
+          initial_obs: null
+          low: 0
+          shape:
+          - 480
+          - 480
+      x:
+        converter:
+          converter_type: eagerx.core.converters/Identity
+        msg_type: std_msgs.msg._Float32MultiArray/Float32MultiArray
+        rate: 30.0
+        space_converter:
+          converter_type: eagerx_dcsc_setups.pendulum.converters/Space_AngleDecomposition
+          dtype: float32
+          high:
+          - 1
+          - 1
+          - 9
+          initial_obs: null
+          low:
+          - -1
+          - -1
+          - -9
+    states:
+      model_parameters:
+        converter:
+          converter_type: eagerx.core.converters/Identity
+        msg_type: std_msgs.msg._Float32MultiArray/Float32MultiArray
+        space_converter:
+          converter_type: eagerx.converters.space_ros_converters/Space_Float32MultiArray
+          dtype: float32
+          high:
+          - 0.000159931461600856
+          - 0.04767953736745631
+          - 0.0415233722862552
+          - 1.3434233283603376e-05
+          - 0.0333391179016334
+          - 7.73125142447252
+          - 0.0009141011375262647
+          - 165.417960777425
+          initial_obs: null
+          low:
+          - 0.000159931461600856
+          - 0.028607722420473783
+          - 0.0415233722862552
+          - 8.060539970162026e-06
+          - 0.0333391179016334
+          - 7.73125142447252
+          - 0.0005484606825157589
+          - 165.417960777425
+      model_state:
+        converter:
+          converter_type: eagerx.core.converters/Identity
+        msg_type: std_msgs.msg._Float32MultiArray/Float32MultiArray
+        space_converter:
+          converter_type: eagerx.converters.space_ros_converters/Space_Float32MultiArray
+          dtype: float32
+          high:
+          - 3.14159265359
+          - 9
+          initial_obs: null
+          low:
+          - -3.14159265359
+          - -9
+  reset_angle:
+    config:
+      color: grey
+      entity_id: ResetAngle
+      executable: python:=eagerx.core.executable_node
+      gains:
+      - 2.0
+      - 0.2
+      - 1.0
+      inputs:
+      - x
+      log_level: 30
+      log_level_memory: 0
+      name: reset_angle
+      outputs:
+      - u
+      print_mode: 1
+      process: 1
+      rate: 30.0
+      states: []
+      targets:
+      - goal
+      threshold: 0.1
+      timeout: 5.0
+      u_range:
+      - -2.0
+      - 2.0
+    feedthroughs:
+      u:
+        address: null
+        converter:
+          converter_type: eagerx.core.converters/Identity
+        delay: 0.0
+        external_rate: null
+        msg_type: std_msgs.msg._Float32MultiArray/Float32MultiArray
+        skip: false
+        space_converter: null
+        window: 1
+    inputs:
+      x:
+        address: null
+        converter:
+          converter_type: eagerx.core.converters/Identity
+        delay: 0.0
+        external_rate: null
+        msg_type: std_msgs.msg._Float32MultiArray/Float32MultiArray
+        skip: false
+        space_converter: null
+        window: 1
+    node_type: eagerx_dcsc_setups.pendulum.nodes/ResetAngle
+    outputs:
+      u:
+        converter:
+          converter_type: eagerx.core.converters/Identity
+        msg_type: std_msgs.msg._Float32MultiArray/Float32MultiArray
+        rate: $(config rate)
+        space_converter:
+          converter_type: eagerx.converters.space_ros_converters/Space_Float32MultiArray
+          dtype: float32
+          high:
+          - 2.0
+          initial_obs: null
+          low:
+          - -2.0
+    states: {}
+    targets:
+      goal:
+        address: null
+        converter:
+          converter_type: eagerx.core.converters/Identity
+        msg_type: std_msgs.msg._Float32MultiArray/Float32MultiArray
+        space_converter: null
+connects:
+- - - pendulum
+    - states
+    - model_state
+  - - reset_angle
+    - targets
+    - goal
+- - - env/actions
+    - outputs
+    - action
+  - - reset_angle
+    - feedthroughs
+    - u
+- - - reset_angle
+    - outputs
+    - u
+  - - butterworth_filter
+    - inputs
+    - signal
+- - - pendulum
+    - sensors
+    - x
+  - - reset_angle
+    - inputs
+    - x
+- - - butterworth_filter
+    - outputs
+    - filtered
+  - - pendulum
+    - actuators
+    - u
+- - - pendulum
+    - sensors
+    - x
+  - - env/observations
+    - inputs
+    - observation
+- - - butterworth_filter
+    - outputs
+    - filtered
+  - - env/observations
+    - inputs
+    - action_applied
+- - - pendulum
+    - sensors
+    - x
+  - - overlay
+    - inputs
+    - x
+- - - butterworth_filter
+    - outputs
+    - filtered
+  - - overlay
+    - inputs
+    - u
+- - - pendulum
+    - sensors
+    - image
+  - - overlay
+    - inputs
+    - base_image
+- - - overlay
+    - outputs
+    - image
+  - - env/render
+    - inputs
+    - image
+gui_state: {}
+nodes:
+  butterworth_filter:
+    config:
+      N: 2
+      Wn: 13
+      btype: lowpass
+      color: grey
+      entity_id: ButterworthFilter
+      executable: python:=eagerx.core.executable_node
+      inputs:
+      - signal
+      log_level: 30
+      log_level_memory: 0
+      name: butterworth_filter
+      outputs:
+      - filtered
+      print_mode: 1
+      process: 0
+      rate: 30.0
+      states: []
+    inputs:
+      signal:
+        address: null
+        converter:
+          converter_type: eagerx.converters.ros_processor/GetIndex_Float32MultiArray
+          index:
+          - 0
+        delay: 0.0
+        external_rate: null
+        msg_type: std_msgs.msg._Float32MultiArray/Float32MultiArray
+        skip: false
+        space_converter:
+          converter_type: eagerx.converters.space_ros_converters/Space_Float32MultiArray
+          dtype: float32
+          high:
+          - 2
+          initial_obs: null
+          low:
+          - -2
+        window: $(config N)
+    node_type: eagerx.nodes.butterworth_filter/ButterworthFilter
+    outputs:
+      filtered:
+        converter:
+          converter_type: eagerx.core.converters/Identity
+        msg_type: std_msgs.msg._Float32MultiArray/Float32MultiArray
+        rate: $(config rate)
+        space_converter:
+          converter_type: eagerx.converters.space_ros_converters/Space_Float32MultiArray
+          dtype: float32
+          high:
+          - 2
+          initial_obs: null
+          low:
+          - -2
+    states: {}
+  env/actions:
+    config:
+      color: yellow
+      entity_id: Actions
+      executable: python:=eagerx.core.executable_node
+      inputs:
+      - step
+      log_level: 30
+      log_level_memory: 0
+      name: env/actions
+      outputs:
+      - set
+      - action
+      print_mode: 1
+      process: 1
+      rate: 1
+      states: []
+    inputs:
+      observations_set:
+        address: null
+        converter:
+          converter_type: eagerx.core.converters/Identity
+        delay: 0.0
+        external_rate: null
+        msg_type: std_msgs.msg._UInt64/UInt64
+        skip: false
+        space_converter: null
+        window: 1
+      step:
+        address: env/supervisor/outputs/step
+        converter:
+          converter_type: eagerx.core.converters/Identity
+        delay: 0.0
+        external_rate: null
+        msg_type: std_msgs.msg._UInt64/UInt64
+        skip: false
+        space_converter: null
+        window: 1
+    node_type: eagerx.core.nodes/ActionsNode
+    outputs:
+      action:
+        converter:
+          converter_type: eagerx.converters.space_ros_converters/Space_Float32MultiArray
+          dtype: float32
+          high:
+          - 2.0
+          initial_obs: null
+          low:
+          - -2.0
+        msg_type: numpy/ndarray
+        rate: $(config rate)
+        space_converter: null
+      set:
+        converter:
+          converter_type: eagerx.core.converters/Identity
+        msg_type: std_msgs.msg._UInt64/UInt64
+        rate: $(config rate)
+        space_converter: null
+    states: {}
+  env/observations:
+    config:
+      color: yellow
+      entity_id: Observations
+      executable: python:=eagerx.core.executable_node
+      inputs:
+      - actions_set
+      - observation
+      - action_applied
+      log_level: 30
+      log_level_memory: 0
+      name: env/observations
+      outputs:
+      - set
+      print_mode: 1
+      process: 1
+      rate: 1
+      states: []
+    inputs:
+      action_applied:
+        address: null
+        converter:
+          converter_type: eagerx.converters.space_ros_converters/Space_Float32MultiArray
+          dtype: float32
+          high:
+          - 2
+          initial_obs:
+          - 0
+          low:
+          - -2
+        delay: 0.0
+        external_rate: null
+        msg_type: numpy/ndarray
+        skip: true
+        space_converter: null
+        window: 1
+      actions_set:
+        address: env/actions/outputs/set
+        converter:
+          converter_type: eagerx.core.converters/Identity
+        delay: 0.0
+        external_rate: null
+        msg_type: std_msgs.msg._UInt64/UInt64
+        skip: false
+        space_converter: null
+        window: 1
+      observation:
+        address: null
+        converter:
+          converter_type: eagerx_dcsc_setups.pendulum.converters/Space_AngleDecomposition
+          dtype: float32
+          high:
+          - 1
+          - 1
+          - 9
+          initial_obs: null
+          low:
+          - -1
+          - -1
+          - -9
+        delay: 0.0
+        external_rate: null
+        msg_type: numpy/ndarray
+        skip: false
+        space_converter: null
+        window: 1
+    node_type: eagerx.core.nodes/ObservationsNode
+    outputs:
+      set:
+        converter:
+          converter_type: eagerx.core.converters/Identity
+        msg_type: std_msgs.msg._UInt64/UInt64
+        rate: $(config rate)
+        space_converter: null
+    states: {}
+  env/render:
+    config:
+      color: grey
+      display: true
+      entity_id: Render
+      executable: python:=eagerx.core.executable_node
+      inputs:
+      - image
+      log_level: 30
+      log_level_memory: 0
+      name: env/render
+      outputs:
+      - done
+      print_mode: 1
+      process: 0
+      rate: 15.0
+      states: []
+    inputs:
+      image:
+        address: null
+        converter:
+          converter_type: eagerx.core.converters/Identity
+        delay: 0.0
+        external_rate: null
+        msg_type: sensor_msgs.msg._Image/Image
+        skip: false
+        space_converter: null
+        window: 0
+    node_type: eagerx.core.nodes/RenderNode
+    outputs:
+      done:
+        converter:
+          converter_type: eagerx.core.converters/Identity
+        msg_type: std_msgs.msg._UInt64/UInt64
+        rate: $(config rate)
+        space_converter: null
+    states: {}
+  overlay:
+    config:
+      color: cyan
+      entity_id: Overlay
+      executable: python:=eagerx.core.executable_node
+      inputs:
+      - base_image
+      - u
+      - x
+      log_level: 30
+      log_level_memory: 0
+      name: overlay
+      outputs:
+      - image
+      print_mode: 1
+      process: 1
+      rate: 15.0
+      states: []
+    inputs:
+      base_image:
+        address: null
+        converter:
+          converter_type: eagerx.core.converters/Identity
+        delay: 0.0
+        external_rate: null
+        msg_type: sensor_msgs.msg._Image/Image
+        skip: false
+        space_converter: null
+        window: 1
+      u:
+        address: null
+        converter:
+          converter_type: eagerx.core.converters/Identity
+        delay: 0.0
+        external_rate: null
+        msg_type: std_msgs.msg._Float32MultiArray/Float32MultiArray
+        skip: false
+        space_converter: null
+        window: 1
+      x:
+        address: null
+        converter:
+          converter_type: eagerx.core.converters/Identity
+        delay: 0.0
+        external_rate: null
+        msg_type: std_msgs.msg._Float32MultiArray/Float32MultiArray
+        skip: false
+        space_converter: null
+        window: 1
+    node_type: eagerx_dcsc_setups.pendulum.overlay/Overlay
+    outputs:
+      image:
+        converter:
+          converter_type: eagerx.core.converters/Identity
+        msg_type: sensor_msgs.msg._Image/Image
+        rate: $(config rate)
+        space_converter: null
+    states: {}
+  pendulum:
+    actuators:
+      u:
+        converter:
+          converter_type: eagerx.core.converters/Identity
+        delay: 0.0
+        external_rate: null
+        msg_type: std_msgs.msg._Float32MultiArray/Float32MultiArray
+        rate: 90.0
+        skip: false
+        space_converter:
+          converter_type: eagerx.converters.space_ros_converters/Space_Float32MultiArray
+          dtype: float32
+          high:
+          - 2
+          initial_obs: null
+          low:
+          - -2
+        window: 1
+    config:
+      Dfun: eagerx_dcsc_setups.pendulum.ode.pendulum_ode/pendulum_dfun
+      actuators:
+      - u
+      always_render: false
+      camera_index: 2
+      entity_id: Pendulum
+      fixed_delay: 0.0
+      name: pendulum
+      render_shape:
+      - 480
+      - 480
+      sensors:
+      - x
+      - image
+      states:
+      - model_state
+    entity_type: eagerx_dcsc_setups.pendulum.objects/Pendulum
+    sensors:
+      action_applied:
+        converter:
+          converter_type: eagerx.core.converters/Identity
+        msg_type: std_msgs.msg._Float32MultiArray/Float32MultiArray
+        rate: 30.0
+        space_converter:
+          converter_type: eagerx.converters.space_ros_converters/Space_Float32MultiArray
+          dtype: float32
+          high:
+          - 2
+          initial_obs: null
+          low:
+          - -2
+      image:
+        converter:
+          converter_type: eagerx.core.converters/Identity
+        msg_type: sensor_msgs.msg._Image/Image
+        rate: 15.0
+        space_converter:
+          converter_type: eagerx.converters.space_ros_converters/Space_Image
+          dtype: float32
+          high: 1
+          initial_obs: null
+          low: 0
+          shape:
+          - 480
+          - 480
+      x:
+        converter:
+          converter_type: eagerx.core.converters/Identity
+        msg_type: std_msgs.msg._Float32MultiArray/Float32MultiArray
+        rate: 30.0
+        space_converter:
+          converter_type: eagerx_dcsc_setups.pendulum.converters/Space_AngleDecomposition
+          dtype: float32
+          high:
+          - 1
+          - 1
+          - 9
+          initial_obs: null
+          low:
+          - -1
+          - -1
+          - -9
+    states:
+      model_parameters:
+        converter:
+          converter_type: eagerx.core.converters/Identity
+        msg_type: std_msgs.msg._Float32MultiArray/Float32MultiArray
+        space_converter:
+          converter_type: eagerx.converters.space_ros_converters/Space_Float32MultiArray
+          dtype: float32
+          high:
+          - 0.000159931461600856
+          - 0.04767953736745631
+          - 0.0415233722862552
+          - 1.3434233283603376e-05
+          - 0.0333391179016334
+          - 7.73125142447252
+          - 0.0009141011375262647
+          - 165.417960777425
+          initial_obs: null
+          low:
+          - 0.000159931461600856
+          - 0.028607722420473783
+          - 0.0415233722862552
+          - 8.060539970162026e-06
+          - 0.0333391179016334
+          - 7.73125142447252
+          - 0.0005484606825157589
+          - 165.417960777425
+      model_state:
+        converter:
+          converter_type: eagerx.core.converters/Identity
+        msg_type: std_msgs.msg._Float32MultiArray/Float32MultiArray
+        space_converter:
+          converter_type: eagerx.converters.space_ros_converters/Space_Float32MultiArray
+          dtype: float32
+          high:
+          - 3.14159265359
+          - 9
+          initial_obs: null
+          low:
+          - -3.14159265359
+          - -9
+  reset_angle:
+    config:
+      color: grey
+      entity_id: ResetAngle
+      executable: python:=eagerx.core.executable_node
+      gains:
+      - 2.0
+      - 0.2
+      - 1.0
+      inputs:
+      - x
+      log_level: 30
+      log_level_memory: 0
+      name: reset_angle
+      outputs:
+      - u
+      print_mode: 1
+      process: 1
+      rate: 30.0
+      states: []
+      targets:
+      - goal
+      threshold: 0.1
+      timeout: 5.0
+      u_range:
+      - -2.0
+      - 2.0
+    feedthroughs:
+      u:
+        address: null
+        converter:
+          converter_type: eagerx.core.converters/Identity
+        delay: 0.0
+        external_rate: null
+        msg_type: std_msgs.msg._Float32MultiArray/Float32MultiArray
+        skip: false
+        space_converter: null
+        window: 1
+    inputs:
+      x:
+        address: null
+        converter:
+          converter_type: eagerx.core.converters/Identity
+        delay: 0.0
+        external_rate: null
+        msg_type: std_msgs.msg._Float32MultiArray/Float32MultiArray
+        skip: false
+        space_converter: null
+        window: 1
+    node_type: eagerx_dcsc_setups.pendulum.nodes/ResetAngle
+    outputs:
+      u:
+        converter:
+          converter_type: eagerx.core.converters/Identity
+        msg_type: std_msgs.msg._Float32MultiArray/Float32MultiArray
+        rate: $(config rate)
+        space_converter:
+          converter_type: eagerx.converters.space_ros_converters/Space_Float32MultiArray
+          dtype: float32
+          high:
+          - 2.0
+          initial_obs: null
+          low:
+          - -2.0
+    states: {}
+    targets:
+      goal:
+        address: null
+        converter:
+          converter_type: eagerx.core.converters/Identity
+        msg_type: std_msgs.msg._Float32MultiArray/Float32MultiArray
+        space_converter: null
