@@ -2,6 +2,14 @@
 
 <!--next-version-placeholder-->
 
+## v0.1.10 (2022-05-15)
+### Fix
+* Update pendulum ode, examples and add reset and overlay nodes ([`661976d`](https://github.com/eager-dev/eagerx_dcsc_setups/commit/661976d364f545f83c70aa27a356d59e0ffc5827))
+* Create experiments and update accordingly ([`034302d`](https://github.com/eager-dev/eagerx_dcsc_setups/commit/034302d2b94feff6d1255012d3609a169e797b0a))
+
+### Documentation
+* Update  bibtex typo ([`b624d0e`](https://github.com/eager-dev/eagerx_dcsc_setups/commit/b624d0e5bc7e13ca4b3d86eaaae845dfb5bbfc7a))
+
 ## v0.1.9 (2022-04-26)
 ### Fix
 * Refactor `is_reactive` to `sync`. ([`c94a9cd`](https://github.com/eager-dev/eagerx_dcsc_setups/commit/c94a9cd7491259673fd1924e8687d7d566421ac3))

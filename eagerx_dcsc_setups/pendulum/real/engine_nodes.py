@@ -48,16 +48,25 @@ class PendulumOutput(EngineNode):
 class PendulumInput(EngineNode):
     @staticmethod
     @register.spec("PendulumInput", EngineNode)
-    def spec(spec, name: str, rate: float, fixed_delay: float = 0.0, process: Optional[int] = process.NEW_PROCESS, color: Optional[str] = "green"):
+    def spec(
+        spec,
+        name: str,
+        rate: float,
+        fixed_delay: float = 0.0,
+        process: Optional[int] = process.NEW_PROCESS,
+        color: Optional[str] = "green",
+    ):
         """PendulumInput spec"""
         # Modify default node params
-        spec.config.update(name=name, rate=rate, process=process, color=color, inputs=["tick", "u", "x"], outputs=["action_applied"])
+        spec.config.update(
+            name=name, rate=rate, process=process, color=color, inputs=["tick", "u", "x"], outputs=["action_applied"]
+        )
         spec.config.fixed_delay = fixed_delay
 
         # Set component parameter
         spec.inputs.u.window = 1
 
-    def initialize(self,  fixed_delay: float):
+    def initialize(self, fixed_delay: float):
         assert fixed_delay >= 0, "Delay must be non-negative."
         self.fixed_delay = fixed_delay
         self.pub_act = rospy.Publisher("/mops/actuator_delay", Float32, queue_size=1)
@@ -106,5 +115,3 @@ class PendulumInput(EngineNode):
         # Publish actual delay
         self.pub_act.publish(Float32(data=delay))
         self.pub_comp.publish(Float32(data=dt))
-
-

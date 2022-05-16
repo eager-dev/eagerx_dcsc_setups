@@ -6,6 +6,7 @@ from std_msgs.msg import Float32MultiArray, Float32, Bool
 import numpy as np
 from time import sleep
 
+
 class FixedDelayAction(eagerx.Node):
     @staticmethod
     @eagerx.register.spec("FixedDelayAction", eagerx.Node)
@@ -65,13 +66,13 @@ class ResetAngle(eagerx.ResetNode):
     @staticmethod
     @eagerx.register.spec("ResetAngle", eagerx.ResetNode)
     def spec(
-            spec,
-            name: str,
-            rate: float,
-            threshold: float = 0.1,
-            timeout: float = 5.0,
-            gains: Optional[List[float]] = None,
-            u_range: Optional[List[float]] = None,
+        spec,
+        name: str,
+        rate: float,
+        threshold: float = 0.1,
+        timeout: float = 5.0,
+        gains: Optional[List[float]] = None,
+        u_range: Optional[List[float]] = None,
     ):
         """This AngleReset node resets the pendulum to a desired angle with zero angular velocity. Note that this controller
         only works properly when resetting the pendulum near the downward facing equilibrium.
@@ -106,6 +107,7 @@ class ResetAngle(eagerx.ResetNode):
 
         # Creat a simple PID controller
         from eagerx_dcsc_setups.pendulum.pid import PID
+
         self.controller = PID(u0=0.0, kp=gains[0], kd=gains[1], ki=gains[2], dt=1 / self.rate)
 
     @eagerx.register.states()

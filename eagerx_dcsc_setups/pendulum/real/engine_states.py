@@ -41,4 +41,3 @@ class DummyState(EngineState):
 
     def reset(self, state, done):
         pass
-

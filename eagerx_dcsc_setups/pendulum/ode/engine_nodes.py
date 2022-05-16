@@ -4,17 +4,18 @@ from typing import Optional, List
 from std_msgs.msg import Float32, Float32MultiArray, UInt64
 import numpy as np
 
+
 class CustomOdeInput(eagerx.EngineNode):
     @staticmethod
     @eagerx.register.spec("CustomOdeInput", eagerx.EngineNode)
     def spec(
-            spec,
-            name: str,
-            rate: float,
-            default_action: List,
-            process: Optional[int] = eagerx.process.BRIDGE,
-            delay_state: bool = True,
-            color: Optional[str] = "green",
+        spec,
+        name: str,
+        rate: float,
+        default_action: List,
+        process: Optional[int] = eagerx.process.BRIDGE,
+        delay_state: bool = True,
+        color: Optional[str] = "green",
     ):
         """OdeInput spec"""
         # Performs all the steps to fill-in the params with registered info about all functions.
@@ -37,7 +38,7 @@ class CustomOdeInput(eagerx.EngineNode):
     def initialize(self, default_action):
         # We will probably use self.simulator[self.obj_name] in callback & reset.
         assert (
-                self.process == eagerx.process.BRIDGE
+                self.process == eagerx.process.ENGINE
         ), "Simulation node requires a reference to the simulator, hence it must be launched in the Engine process"
         self.obj_name = self.config["name"]
         self.default_action = np.array(default_action)
@@ -51,13 +52,13 @@ class CustomOdeInput(eagerx.EngineNode):
     @eagerx.register.inputs(tick=UInt64, action=Float32MultiArray)
     @eagerx.register.outputs(action_applied=Float32MultiArray)
     def callback(
-            self,
-            t_n: float,
-            tick: Optional[Msg] = None,
-            action: Optional[Float32MultiArray] = None,
+        self,
+        t_n: float,
+        tick: Optional[Msg] = None,
+        action: Optional[Float32MultiArray] = None,
     ):
         assert isinstance(self.simulator[self.obj_name], dict), (
-                'Simulator object "%s" is not compatible with this simulation node.' % self.simulator[self.obj_name]
+            'Simulator object "%s" is not compatible with this simulation node.' % self.simulator[self.obj_name]
         )
 
         # Set action in simulator for next step.

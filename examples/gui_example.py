@@ -40,14 +40,16 @@ if __name__ == "__main__":
     # Define step function
     def step_fn(prev_obs, obs, action, steps):
         state = obs["observation"][0]
+        u = action["action"][0]
+
         # Calculate reward
         sin_th, cos_th, thdot = state
         th = np.arctan2(sin_th, cos_th)
-        cost = th**2 + 0.1 * (thdot / (1 + 10 * abs(th))) ** 2
+        cost = th**2 + 0.1 * (thdot / (1 + 10 * abs(th))) ** 2 + 0.01 * u ** 2
         # Determine done flag
         done = steps > 500
         # Set info:
-        info = dict()
+        info = {"TimeLimit.truncated": done}
         return obs, -cost, done, info
 
     # Initialize Environment
