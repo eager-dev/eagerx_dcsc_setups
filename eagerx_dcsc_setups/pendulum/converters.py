@@ -34,4 +34,4 @@ class Space_AngleDecomposition(SpaceConverter):
 
     def B_to_A(self, msg):
         angle = msg.data[0]
-        return np.concatenate(([np.sin(angle), np.cos(angle)], msg.data[1:]), axis=0)
+        return np.concatenate(([np.cos(angle), np.sin(angle)], msg.data[1:]), axis=0)

@@ -43,9 +43,9 @@ if __name__ == "__main__":
         u = action["action"][0]
 
         # Calculate reward
-        sin_th, cos_th, thdot = state
+        cos_th, sin_th, thdot = state
         th = np.arctan2(sin_th, cos_th)
-        cost = th**2 + 0.1 * (thdot / (1 + 10 * abs(th))) ** 2 + 0.01 * u ** 2
+        cost = th**2 + 0.1 * (thdot / (1 + 10 * abs(th))) ** 2 + 0.01 * u**2
         # Determine done flag
         done = steps > 500
         # Set info:

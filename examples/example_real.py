@@ -21,13 +21,14 @@ import rospy
 import stable_baselines3 as sb
 from functools import partial
 
+
 def make_graph(
-        sensor_rate: float,
-        actuator_rate: float,
-        image_rate: float,
-        evaluation: bool,
+    sensor_rate: float,
+    actuator_rate: float,
+    image_rate: float,
+    evaluation: bool,
 ):
-    u_limit = 2.
+    u_limit = 2.0
     states = ["model_state"]
 
     # Create empty graph
@@ -84,10 +85,11 @@ def make_graph(
 
     return graph, pendulum
 
+
 if __name__ == "__main__":
     # Define rates
-    sensor_rate = 30.
-    actuator_rate = 30.
+    sensor_rate = 30.0
+    actuator_rate = 30.0
     image_rate = sensor_rate / 2
     bridge_rate = max([sensor_rate, actuator_rate, image_rate])
     algorithm = {"name": "SAC", "sim_params": {}, "real_params": {"ent_coef": "auto_0.1"}}
@@ -100,15 +102,12 @@ if __name__ == "__main__":
     train_graph, pendulum = make_graph(
         sensor_rate=sensor_rate, actuator_rate=actuator_rate, image_rate=image_rate, evaluation=False
     )
-    eval_graph, _ = make_graph(
-        sensor_rate=sensor_rate, actuator_rate=actuator_rate, image_rate=image_rate, evaluation=True
-    )
+    eval_graph, _ = make_graph(sensor_rate=sensor_rate, actuator_rate=actuator_rate, image_rate=image_rate, evaluation=True)
 
     # Show in the gui
     train_graph.gui()
     pendulum.gui("OdeBridge")
     pendulum.gui("RealBridge")
-
 
     # Define bridges
     bridge_ode = Bridge.make("OdeBridge", rate=bridge_rate, sync=True, real_time_factor=0, process=process.NEW_PROCESS)
@@ -120,9 +119,9 @@ if __name__ == "__main__":
         u = action["voltage"][0]
 
         # Calculate reward
-        sin_th, cos_th, thdot = state
+        cos_th, sin_th, thdot = state
         th = np.arctan2(sin_th, cos_th)
-        cost = th**2 + 0.1 * (thdot / (1 + 10 * abs(th))) ** 2 + 0.01 * u ** 2
+        cost = th**2 + 0.1 * (thdot / (1 + 10 * abs(th))) ** 2 + 0.01 * u**2
 
         # Determine done flag
         done = steps > length_eps
@@ -141,8 +140,12 @@ if __name__ == "__main__":
     eval_step_fn = partial(step_fn, length_eps=length_eval_eps)
 
     # Initialize Environment
-    simulation_env = Flatten(EagerxEnv(name="ode", rate=sensor_rate, graph=train_graph, bridge=bridge_ode, step_fn=train_step_fn))
-    real_env = Flatten(EagerxEnv(name="real", rate=sensor_rate, graph=eval_graph, bridge=bridge_real, step_fn=eval_step_fn, reset_fn=reset_fn))
+    simulation_env = Flatten(
+        EagerxEnv(name="ode", rate=sensor_rate, graph=train_graph, bridge=bridge_ode, step_fn=train_step_fn)
+    )
+    real_env = Flatten(
+        EagerxEnv(name="real", rate=sensor_rate, graph=eval_graph, bridge=bridge_real, step_fn=eval_step_fn, reset_fn=reset_fn)
+    )
 
     # Seed envs
     real_env.seed(seed)
