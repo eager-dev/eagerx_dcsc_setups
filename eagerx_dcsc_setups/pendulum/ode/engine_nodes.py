@@ -38,7 +38,7 @@ class CustomOdeInput(eagerx.EngineNode):
     def initialize(self, default_action):
         # We will probably use self.simulator[self.obj_name] in callback & reset.
         assert (
-                self.process == eagerx.process.ENGINE
+            self.process == eagerx.process.ENGINE
         ), "Simulation node requires a reference to the simulator, hence it must be launched in the Engine process"
         self.obj_name = self.config["name"]
         self.default_action = np.array(default_action)
