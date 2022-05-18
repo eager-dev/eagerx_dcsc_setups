@@ -107,7 +107,7 @@ class Pendulum(Object):
         spec.config.fixed_delay = fixed_delay
 
         # Add engine implementation
-        Pendulum.agnostic(spec, sensor_rate,  image_rate, actuator_rate)
+        Pendulum.agnostic(spec, sensor_rate, image_rate, actuator_rate)
 
     @staticmethod
     @register.engine(entity_id, OdeEngine)  # This decorator pre-initializes engine implementation with default object_params
