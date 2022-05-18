@@ -2,6 +2,17 @@
 
 <!--next-version-placeholder-->
 
+## v0.1.11 (2022-05-18)
+### Fix
+* Refactor bridge to engine ([`2da004b`](https://github.com/eager-dev/eagerx_dcsc_setups/commit/2da004b2e11d734c656aaecf0be868038ae87776))
+* Undefined name rate ([`4cc75a0`](https://github.com/eager-dev/eagerx_dcsc_setups/commit/4cc75a0ad4ee874f5c25294d6e40ab5eff8b0e52))
+* Refactor bridge to engine ([`a23225d`](https://github.com/eager-dev/eagerx_dcsc_setups/commit/a23225dd5fff21a42921ffad4fd61ac25c70df75))
+* Change order angle decomposition to [cos, sin] and run codestyle on experiments and examples ([`1fc1b87`](https://github.com/eager-dev/eagerx_dcsc_setups/commit/1fc1b87e68476f6f6155bccbfa1c59198ebdce16))
+* Update dependencies ([`a8966ba`](https://github.com/eager-dev/eagerx_dcsc_setups/commit/a8966ba641b6738ffbadf0ece136bed6db0bea5d))
+* Refactor bridge to engine after merge ([`10c22a3`](https://github.com/eager-dev/eagerx_dcsc_setups/commit/10c22a342beb7482c02a6a052c2ca8c3e1cf3057))
+* Refactor bridge to engine ([`6842b95`](https://github.com/eager-dev/eagerx_dcsc_setups/commit/6842b959749e685aa484ac052c13c4c14084a1b4))
+* Refactor initialize_spec ([`5f35a6d`](https://github.com/eager-dev/eagerx_dcsc_setups/commit/5f35a6dee39cbf71465c938e7a7d16e90fa628b9))
+
 ## v0.1.10 (2022-05-15)
 ### Fix
 * Update pendulum ode, examples and add reset and overlay nodes ([`661976d`](https://github.com/eager-dev/eagerx_dcsc_setups/commit/661976d364f545f83c70aa27a356d59e0ffc5827))
