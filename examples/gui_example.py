@@ -10,7 +10,7 @@ from eagerx.wrappers import Flatten
 # Implementation specific
 import eagerx.nodes  # Registers butterworth_filter # noqa # pylint: disable=unused-import
 import eagerx.converters  # Registers SpaceConverters # noqa # pylint: disable=unused-import
-import eagerx_ode  # Registers OdeBridge # noqa # pylint: disable=unused-import
+import eagerx_ode  # Registers OdeEngine # noqa # pylint: disable=unused-import
 import eagerx_dcsc_setups.pendulum  # Registers Pendulum # noqa # pylint: disable=unused-import
 
 # Other
@@ -28,9 +28,9 @@ if __name__ == "__main__":
     # Show and modify in the gui
     graph.gui()
 
-    # Define bridges
-    bridge = eagerx.Bridge.make(
-        "OdeBridge",
+    # Define engines
+    engine = eagerx.Engine.make(
+        "OdeEngine",
         rate=rate,
         is_reactive=True,
         real_time_factor=0,
@@ -43,9 +43,9 @@ if __name__ == "__main__":
         u = action["action"][0]
 
         # Calculate reward
-        sin_th, cos_th, thdot = state
+        cos_th, sin_th, thdot = state
         th = np.arctan2(sin_th, cos_th)
-        cost = th**2 + 0.1 * (thdot / (1 + 10 * abs(th))) ** 2 + 0.01 * u ** 2
+        cost = th**2 + 0.1 * (thdot / (1 + 10 * abs(th))) ** 2 + 0.01 * u**2
         # Determine done flag
         done = steps > 500
         # Set info:
@@ -53,7 +53,7 @@ if __name__ == "__main__":
         return obs, -cost, done, info
 
     # Initialize Environment
-    env = Flatten(EagerxEnv(name="gui_env", rate=rate, graph=graph, bridge=bridge, step_fn=step_fn))
+    env = Flatten(EagerxEnv(name="rx", rate=rate, graph=graph, engine=engine, step_fn=step_fn))
     env.render("human")
 
     # Initialize learner (kudos to Antonin)

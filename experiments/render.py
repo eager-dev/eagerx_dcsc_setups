@@ -23,9 +23,9 @@ import numpy as np
 
 if __name__ == "__main__":
     DR = False
-    FA = 2
-    eval_delay = 1 / 30
-    real_delay = None
+    FA = 1
+    eval_delay = None
+    real_delay = 0.0
 
     # Define constants
     sensor_rate = 30.0
@@ -38,25 +38,34 @@ if __name__ == "__main__":
     length_eval_eps = 90
     eval_eps = 3
     log_name = "2022-05-09-0659"
-    model_name = "bl_ed_fa2_0"
+    model_name = "bl_fa1_0"
     NAME = "sim"
     LOG_DIR = os.path.dirname(eagerx_dcsc_setups.__file__) + f"/../logs/{NAME}_{log_name}"
 
     step_fn = partial(util.step_fn, length_eps=length_eval_eps)
-    eval_reset_fn = partial(util.eval_reset_fn, eval_delay=eval_delay)
+    eval_reset_fn = partial(util.eval_reset_fn, eval_delay=None)
 
     # Define engines
-    engine_ode = Engine.make("OdeEngine", rate=engine_rate, sync=True, real_time_factor=0, process=process.NEW_PROCESS)
+    engine_real = Engine.make("RealEngine", rate=engine_rate, sync=True, process=process.NEW_PROCESS)
 
     # Create evaluation environment
     graph = Graph.create()
     graph = util.make_graph(
-        DR=DR, FA=FA, evaluation=True, sensor_rate=sensor_rate, actuator_rate=actuator_rate, image_rate=image_rate, render=True
+        DR=DR,
+        FA=FA,
+        FD=0.0,
+        evaluation=True,
+        sensor_rate=sensor_rate,
+        actuator_rate=actuator_rate,
+        image_rate=image_rate,
+        render=True,
     )
     env = Flatten(
-        EagerxEnv(name="render_env", rate=sensor_rate, graph=graph, engine=engine_ode, step_fn=step_fn, reset_fn=eval_reset_fn)
+        EagerxEnv(
+            name="render_env", rate=sensor_rate, graph=graph, engine=engine_real, step_fn=step_fn, reset_fn=eval_reset_fn
+        )
     )
 
     model = sb.SAC.load(f"{LOG_DIR}/models/{model_name}")
 
-    util.eval_env(model, env, eval_eps, gif_file=f"{LOG_DIR}/{model_name}_sim.gif")
+    util.eval_env(model, env, eval_eps, gif_file=f"{LOG_DIR}/{model_name}_sync.gif", real_delay=real_delay)

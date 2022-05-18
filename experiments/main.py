@@ -11,35 +11,57 @@ import numpy as np
 
 if __name__ == "__main__":
     mode = "real"
-    load_log = "2022-05-08-1101"
+    load_log = "2022-05-09-0659"
 
     # Define constants
-    sensor_rate = 30.
-    actuator_rate = 90.
+    sensor_rate = 30.0
+    actuator_rate = 90.0
     image_rate = sensor_rate / 2
-    bridge_rate = max([sensor_rate, actuator_rate, image_rate])
-    delay = 0.025
+    engine_rate = max([sensor_rate, actuator_rate, image_rate])
+    delay = 0.0
     seed = 27
     np.random.seed(seed)
 
     length_train_eps = 90
     length_eval_eps = 270
-    train_eps = 100
+    train_eps = 250
     eval_eps = 10
     repetitions = 1
 
+    # envs = {
+    #     "bl_fa1": {"dr": False, "ed": False, "fa": 1, "evaluate_on": ["bl_fa1", "dr_ed_fa1"]},
+    #     "dr_ed_fa1": {"dr": True, "ed": True, "fa": 1, "evaluate_on": ["dr_ed_fa1"]},
+    #     "dr_ed_fa2": {"dr": True, "ed": True, "fa": 2, "evaluate_on": ["dr_ed_fa2"]},
+    # }
+
     envs = {
-        "bl": {"dr": False, "emmd": False, "fa": 0, "evaluate_on": ["bl"]},
-        "bl_fa1": {"dr": False, "emmd": False, "fa": 1, "evaluate_on": ["bl_fa1", "dr_fa1"]},
-        "dr_fa1": {"dr": True, "emmd": False, "fa": 1, "evaluate_on": ["dr_fa1", "dr_emmd_fa1"]},
-        "dr_emmd_fa1": {"dr": True, "emmd": True, "fa": 1, "evaluate_on": ["dr_emmd_fa1"]},
-        "dr_emmd_fa2": {"dr": True, "emmd": True, "fa": 2, "evaluate_on": ["dr_emmd_fa2"]},
+        "bl_fa1": {"dr": False, "ed": False, "fa": 1, "evaluate_on": ["bl_fa1"]},
     }
 
     if mode == "sim":
-        simulate(image_rate, sensor_rate=sensor_rate, actuator_rate=actuator_rate, bridge_rate=bridge_rate, delay=delay,
-                 seed=seed, length_train_eps=length_train_eps, length_eval_eps=length_eval_eps, train_eps=train_eps,
-                 eval_eps=eval_eps, repetitions=repetitions, envs=envs)
+        simulate(
+            image_rate,
+            sensor_rate=sensor_rate,
+            actuator_rate=actuator_rate,
+            engine_rate=engine_rate,
+            delay=delay,
+            seed=seed,
+            length_train_eps=length_train_eps,
+            length_eval_eps=length_eval_eps,
+            train_eps=train_eps,
+            eval_eps=eval_eps,
+            repetitions=repetitions,
+            envs=envs,
+        )
     elif mode == "real":
-        evaluate_real(sensor_rate=sensor_rate, bridge_rate=bridge_rate, delay=delay, seed=seed, length_eval_eps=length_eval_eps,
-                      eval_eps=eval_eps, repetitions=repetitions, envs=envs, log_name=load_log)
+        evaluate_real(
+            sensor_rate=sensor_rate,
+            engine_rate=engine_rate,
+            delay=delay,
+            seed=seed,
+            length_eval_eps=length_eval_eps,
+            eval_eps=eval_eps,
+            repetitions=repetitions,
+            envs=envs,
+            log_name=load_log,
+        )

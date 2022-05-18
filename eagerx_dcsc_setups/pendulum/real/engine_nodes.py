@@ -21,9 +21,6 @@ class PendulumOutput(EngineNode):
     @register.spec("PendulumOutput", EngineNode)
     def spec(spec, name: str, rate: float, process: Optional[int] = process.NEW_PROCESS, color: Optional[str] = "cyan"):
         """PendulumOutput spec"""
-        # Performs all the steps to fill-in the params with registered info about all functions.
-        spec.initialize(PendulumOutput)
-
         # Modify default node params
         spec.config.name = name
         spec.config.rate = rate
@@ -60,9 +57,6 @@ class PendulumInput(EngineNode):
         color: Optional[str] = "green",
     ):
         """PendulumInput spec"""
-        # Performs all the steps to fill-in the params with registered info about all functions.
-        spec.initialize(PendulumInput)
-
         # Modify default node params
         spec.config.update(
             name=name, rate=rate, process=process, color=color, inputs=["tick", "u", "x"], outputs=["action_applied"]

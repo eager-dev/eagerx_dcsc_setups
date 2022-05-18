@@ -13,7 +13,7 @@ class CustomOdeInput(eagerx.EngineNode):
         name: str,
         rate: float,
         default_action: List,
-        process: Optional[int] = eagerx.process.BRIDGE,
+        process: Optional[int] = eagerx.process.ENGINE,
         delay_state: bool = True,
         color: Optional[str] = "green",
     ):
@@ -38,8 +38,8 @@ class CustomOdeInput(eagerx.EngineNode):
     def initialize(self, default_action):
         # We will probably use self.simulator[self.obj_name] in callback & reset.
         assert (
-            self.process == eagerx.process.BRIDGE
-        ), "Simulation node requires a reference to the simulator, hence it must be launched in the Bridge process"
+            self.process == eagerx.process.ENGINE
+        ), "Simulation node requires a reference to the simulator, hence it must be launched in the Engine process"
         self.obj_name = self.config["name"]
         self.default_action = np.array(default_action)
 

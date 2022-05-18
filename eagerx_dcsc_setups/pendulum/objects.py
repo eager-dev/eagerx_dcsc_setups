@@ -3,8 +3,8 @@ from std_msgs.msg import Float32MultiArray
 from sensor_msgs.msg import Image
 
 # EAGERx IMPORTS
-from eagerx_reality.bridge import RealBridge
-from eagerx_ode.bridge import OdeBridge
+from eagerx_reality.engine import RealEngine
+from eagerx_ode.engine import OdeEngine
 from eagerx import Object, EngineNode, SpaceConverter, EngineState, process
 from eagerx.core.specs import ObjectSpec
 from eagerx.core.graph_engine import EngineGraph
@@ -83,7 +83,7 @@ class Pendulum(Object):
         sensors=None,
         states=None,
         sensor_rate=30,
-        actuator_rate=90,
+        actuator_rate=30,
         image_rate=15,
         always_render=False,
         render_shape=None,
@@ -92,9 +92,6 @@ class Pendulum(Object):
         fixed_delay=0.0,
     ):
         """Object spec of Pendulum"""
-        # Performs all the steps to fill-in the params with registered info about all functions.
-        Pendulum.initialize_spec(spec)
-
         # Modify default agnostic params
         # Only allow changes to the agnostic params (rates, (space)converters, etc...
         spec.config.name = name
@@ -109,22 +106,22 @@ class Pendulum(Object):
         spec.config.Dfun = Dfun
         spec.config.fixed_delay = fixed_delay
 
-        # Add bridge implementation
+        # Add engine implementation
         Pendulum.agnostic(spec, sensor_rate, image_rate, actuator_rate)
 
     @staticmethod
-    @register.bridge(entity_id, OdeBridge)  # This decorator pre-initializes bridge implementation with default object_params
-    def ode_bridge(spec: ObjectSpec, graph: EngineGraph):
-        """Engine-specific implementation (OdeBridge) of the object."""
-        # Import any object specific entities for this bridge
+    @register.engine(entity_id, OdeEngine)  # This decorator pre-initializes engine implementation with default object_params
+    def ode_engine(spec: ObjectSpec, graph: EngineGraph):
+        """Engine-specific implementation (OdeEngine) of the object."""
+        # Import any object specific entities for this engine
         import eagerx_dcsc_setups.pendulum.ode  # noqa # pylint: disable=unused-import
 
         # Set object arguments (nothing to set here in this case)
-        spec.OdeBridge.ode = "eagerx_dcsc_setups.pendulum.ode.pendulum_ode/pendulum_ode"
-        spec.OdeBridge.Dfun = spec.config.Dfun
+        spec.OdeEngine.ode = "eagerx_dcsc_setups.pendulum.ode.pendulum_ode/pendulum_ode"
+        spec.OdeEngine.Dfun = spec.config.Dfun
 
         # Set default params of pendulum ode [J, m, l, b, K, R, c, d].
-        spec.OdeBridge.ode_params = [
+        spec.OdeEngine.ode_params = [
             0.000159931461600856,
             0.0508581731919534,
             0.0415233722862552,
@@ -136,8 +133,8 @@ class Pendulum(Object):
         ]
 
         # Create engine_states (no agnostic states defined in this case)
-        spec.OdeBridge.states.model_state = EngineState.make("OdeEngineState")
-        spec.OdeBridge.states.model_parameters = EngineState.make("OdeParameters", list(range(7)))
+        spec.OdeEngine.states.model_state = EngineState.make("OdeEngineState")
+        spec.OdeEngine.states.model_parameters = EngineState.make("OdeParameters", list(range(7)))
 
         # Create sensor engine nodes
         obs = EngineNode.make("OdeOutput", "x", rate=spec.sensors.x.rate, process=2)
@@ -167,15 +164,15 @@ class Pendulum(Object):
         # graph.is_valid(plot=True)
 
     @staticmethod
-    @register.bridge(entity_id, RealBridge)  # This decorator pre-initializes bridge implementation with default object_params
-    def real_bridge(spec: ObjectSpec, graph: EngineGraph):
-        """Engine-specific implementation (RealBridge) of the object."""
-        # Import any object specific entities for this bridge
+    @register.engine(entity_id, RealEngine)  # This decorator pre-initializes engine implementation with default object_params
+    def real_engine(spec: ObjectSpec, graph: EngineGraph):
+        """Engine-specific implementation (RealEngine) of the object."""
+        # Import any object specific entities for this engine
         import eagerx_dcsc_setups.pendulum.real  # noqa # pylint: disable=unused-import
 
         # Couple engine states
-        spec.RealBridge.states.model_state = EngineState.make("RandomActionAndSleep", sleep_time=1.0, repeat=1)
-        spec.RealBridge.states.model_parameters = EngineState.make("Dummy")
+        spec.RealEngine.states.model_state = EngineState.make("RandomActionAndSleep", sleep_time=1.0, repeat=1)
+        spec.RealEngine.states.model_parameters = EngineState.make("Dummy")
 
         # Create sensor engine nodes
         # Rate=None, because we will connect them to sensors (thus uses the rate set in the agnostic specification)
