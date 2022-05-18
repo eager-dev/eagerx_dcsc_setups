@@ -13,7 +13,7 @@ class CustomOdeInput(eagerx.EngineNode):
         name: str,
         rate: float,
         default_action: List,
-        process: Optional[int] = eagerx.process.BRIDGE,
+        process: Optional[int] = eagerx.process.ENGINE,
         delay_state: bool = True,
         color: Optional[str] = "green",
     ):
