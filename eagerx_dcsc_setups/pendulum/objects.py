@@ -83,7 +83,7 @@ class Pendulum(Object):
         sensors=None,
         states=None,
         sensor_rate=30,
-        actuator_rate=90,
+        actuator_rate=30,
         image_rate=15,
         always_render=False,
         render_shape=None,
@@ -107,7 +107,7 @@ class Pendulum(Object):
         spec.config.fixed_delay = fixed_delay
 
         # Add engine implementation
-        Pendulum.agnostic(spec, rate)
+        Pendulum.agnostic(spec, sensor_rate,  image_rate, actuator_rate)
 
     @staticmethod
     @register.engine(entity_id, OdeEngine)  # This decorator pre-initializes engine implementation with default object_params
