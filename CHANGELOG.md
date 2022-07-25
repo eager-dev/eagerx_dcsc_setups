@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.1.12 (2022-07-25)
+### Fix
+* Create scripts for tutorial at ICRA and update overlay ([`c92da75`](https://github.com/eager-dev/eagerx_dcsc_setups/commit/c92da75c1deb7e659020300ba301e72b68568c51))
+
 ## v0.1.11 (2022-05-18)
 ### Fix
 * Refactor bridge to engine ([`2da004b`](https://github.com/eager-dev/eagerx_dcsc_setups/commit/2da004b2e11d734c656aaecf0be868038ae87776))
