@@ -63,7 +63,7 @@ class Overlay(eagerx.Node):
             # Put text
             font = cv2.FONT_HERSHEY_SIMPLEX
             text = "Applied Voltage"
-            text_size = cv2.getTextSize(text, font, 2/3, 2)[0]
+            text_size = cv2.getTextSize(text, font, 2 / 3, 2)[0]
             text_x = int((width - text_size[0]) / 2)
             text_y = int(text_size[1])
             img = cv2.rectangle(
@@ -73,7 +73,7 @@ class Overlay(eagerx.Node):
                 (255, 255, 255),
                 -1,
             )
-            img = cv2.putText(img, text, (text_x, text_y), font, 2/3, (0, 0, 0), thickness=2)
+            img = cv2.putText(img, text, (text_x, text_y), font, 2 / 3, (0, 0, 0), thickness=2)
 
             # Draw grey bar
             img = cv2.rectangle(
@@ -89,21 +89,19 @@ class Overlay(eagerx.Node):
             p2 = (width // 2 + int(side_length * u * 2 / 15), text_y * 3)
             img = cv2.rectangle(img, p1, p2, (0, 0, 255), -1)
 
-
-
             # Add info
             info = f"t ={t_n: .2f} s"
             if self.user_name is not None:
                 info += f", user = {self.user_name}"
 
-            info_width = cv2.getTextSize(info, font, 2/3, 2)[0][0]
-            info_height = cv2.getTextSize(info, font, 2/3, 2)[0][1]
+            info_width = cv2.getTextSize(info, font, 2 / 3, 2)[0][0]
+            info_height = cv2.getTextSize(info, font, 2 / 3, 2)[0][1]
 
             info_x = (width - info_width) // 2
             info_y = height - info_height // 2
 
             img = cv2.rectangle(img, (info_x, height - 2 * info_height), (info_x + info_width, height), (255, 255, 255), -1)
-            img = cv2.putText(img, info, (info_x, info_y), font, 2/3, (0, 0, 0), thickness=2)
+            img = cv2.putText(img, info, (info_x, info_y), font, 2 / 3, (0, 0, 0), thickness=2)
 
             # Prepare image for transmission.
             data = img.tobytes("C")
