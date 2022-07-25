@@ -33,7 +33,7 @@ class Pendulum(Object):
         # Set observation properties: (space_converters, rate, etc...)
         spec.sensors.x.rate = sensor_rate
         spec.sensors.x.space_converter = SpaceConverter.make(
-            "Space_AngleDecomposition", low=[-1, -1, -9], high=[1, 1, 9], dtype="float32"
+            "Space_AngleDecomposition", low=[-1, -1, -99], high=[1, 1, 99], dtype="float32"
         )
 
         spec.sensors.action_applied.rate = sensor_rate

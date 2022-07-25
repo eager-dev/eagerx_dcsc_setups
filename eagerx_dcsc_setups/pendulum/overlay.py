@@ -1,4 +1,5 @@
 import eagerx
+import rospy
 from eagerx import register
 from eagerx.utils.utils import Msg
 from std_msgs.msg import Float32MultiArray, Float32
@@ -16,6 +17,7 @@ class Overlay(eagerx.Node):
         rate: float,
         process: int = eagerx.process.ENVIRONMENT,
         color: str = "cyan",
+        user_name: str = None,
     ):
         """Overlay spec"""
         # Fills spec with defaults parameters
@@ -26,8 +28,10 @@ class Overlay(eagerx.Node):
             name=name, rate=rate, process=process, color=color, inputs=["base_image", "u", "x"], outputs=["image"]
         )
 
-    def initialize(self):
-        pass
+        spec.config.user_name = user_name
+
+    def initialize(self, user_name: str = None):
+        self.user_name = user_name
 
     @register.states()
     def reset(self):
@@ -59,37 +63,47 @@ class Overlay(eagerx.Node):
             # Put text
             font = cv2.FONT_HERSHEY_SIMPLEX
             text = "Applied Voltage"
-            text_size = cv2.getTextSize(text, font, 1.0, 2)[0]
+            text_size = cv2.getTextSize(text, font, 2/3, 2)[0]
             text_x = int((width - text_size[0]) / 2)
             text_y = int(text_size[1])
-            # print(f"text_size = {text_size} | text_x = {text_x} | text_y = {text_y}")
-            img = cv2.putText(img, text, (text_x, text_y), font, 1.0, (0, 0, 255))
+            img = cv2.rectangle(
+                img,
+                (text_x, 0),
+                (int((width + text_size[0]) / 2), int(text_y * 1.5)),
+                (255, 255, 255),
+                -1,
+            )
+            img = cv2.putText(img, text, (text_x, text_y), font, 2/3, (0, 0, 0), thickness=2)
 
             # Draw grey bar
             img = cv2.rectangle(
                 img,
-                (width // 2 - side_length * 4 // 10, height // 2 - side_length * 9 // 20),
-                (width // 2 + 4 * side_length // 10, height // 2 - 4 * side_length // 10),
+                (width // 2 - side_length * 4 // 10, text_y * 2),
+                (width // 2 + 4 * side_length // 10, text_y * 3),
                 (125, 125, 125),
                 -1,
             )
 
             # Fill bar proportional to the action that is applied
-            p1 = (width // 2, height // 2 - side_length * 9 // 20)
-            p2 = (width // 2 + int(side_length * u * 2 / 15), height // 2 - 4 * side_length // 10)
+            p1 = (width // 2, text_y * 2)
+            p2 = (width // 2 + int(side_length * u * 2 / 15), text_y * 3)
             img = cv2.rectangle(img, p1, p2, (0, 0, 255), -1)
 
-            img = cv2.putText(img, f"t ={t_n: .2f} s", (text_x, height - text_y), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 0, 255))
 
-            # Add theta info
-            img = cv2.putText(
-                img,
-                f"theta ={theta: .2f} rad",
-                (text_x, height - int(2.2 * text_y)),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                1.0,
-                (0, 0, 255),
-            )
+
+            # Add info
+            info = f"t ={t_n: .2f} s"
+            if self.user_name is not None:
+                info += f", user = {self.user_name}"
+
+            info_width = cv2.getTextSize(info, font, 2/3, 2)[0][0]
+            info_height = cv2.getTextSize(info, font, 2/3, 2)[0][1]
+
+            info_x = (width - info_width) // 2
+            info_y = height - info_height // 2
+
+            img = cv2.rectangle(img, (info_x, height - 2 * info_height), (info_x + info_width, height), (255, 255, 255), -1)
+            img = cv2.putText(img, info, (info_x, info_y), font, 2/3, (0, 0, 0), thickness=2)
 
             # Prepare image for transmission.
             data = img.tobytes("C")

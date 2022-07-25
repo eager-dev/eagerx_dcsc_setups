@@ -18,7 +18,6 @@ import eagerx_dcsc_setups.pendulum  # Registers Pendulum # noqa # pylint: disabl
 # Other
 import numpy as np
 import rospy
-import stable_baselines3 as sb
 from functools import partial
 
 
@@ -155,6 +154,7 @@ if __name__ == "__main__":
     simulation_env.seed(seed)
 
     # Initialize learner (kudos to Antonin)
+    import stable_baselines3 as sb
     sb_algorithm = getattr(sb, algorithm["name"])
     model = sb_algorithm("MlpPolicy", simulation_env, verbose=1, seed=seed, **algorithm["sim_params"])
 
