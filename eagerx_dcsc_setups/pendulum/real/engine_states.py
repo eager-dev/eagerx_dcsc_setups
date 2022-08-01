@@ -1,24 +1,26 @@
 import rospy
+from typing import Any
 from random import random
-from eagerx import EngineState
-import eagerx.core.register as register
+import eagerx
+from eagerx.core.specs import EngineStateSpec, ObjectSpec
 from dcsc_setups.srv import MopsWrite, MopsWriteRequest
 
 
-class RandomActionAndSleep(EngineState):
-    @staticmethod
-    @register.spec("RandomActionAndSleep", EngineState)
-    def spec(spec, sleep_time: float = 1.0, repeat: int = 1):
+class RandomActionAndSleep(eagerx.EngineState):
+    @classmethod
+    def make(cls, sleep_time: float = 1.0, repeat: int = 1) -> EngineStateSpec:
+        spec = cls.get_specification()
         spec.config.sleep_time = sleep_time
         spec.config.repeat = repeat
+        return spec
 
-    def initialize(self, sleep_time: float, repeat: int):
-        self.sleep_time = sleep_time
-        self.repeat = repeat
+    def initialize(self, spec: EngineStateSpec, object_spec: ObjectSpec, simulator: Any):
+        self.sleep_time = spec.config.sleep_time
+        self.repeat = spec.config.repeat
         self.service = rospy.ServiceProxy("/mops/write", MopsWrite)
         self.service.wait_for_service()
 
-    def reset(self, state, done):
+    def reset(self, state):
         for i in range(self.repeat):
             action = -3.0 + random() * 6.0
             req = MopsWriteRequest()
@@ -30,14 +32,15 @@ class RandomActionAndSleep(EngineState):
             rospy.sleep(self.sleep_time)
 
 
-class DummyState(EngineState):
-    @staticmethod
-    @register.spec("Dummy", EngineState)
-    def spec(spec):
+class DummyState(eagerx.EngineState):
+    @classmethod
+    def make(cls):
+        spec = cls.get_specification()
         spec.initialize(DummyState)
+        return spec
 
-    def initialize(self):
+    def initialize(self, spec: EngineStateSpec, object_spec: ObjectSpec, simulator: Any):
         pass
 
-    def reset(self, state, done):
+    def reset(self, state):
         pass

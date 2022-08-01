@@ -1,68 +1,69 @@
 import eagerx
+from eagerx import Space, register
+from eagerx.core.specs import NodeSpec, ObjectSpec
 from eagerx.utils.utils import Msg
-from typing import Optional, List
-from std_msgs.msg import Float32, Float32MultiArray, UInt64
+
+from typing import Optional, List, Any
 import numpy as np
 
 
 class CustomOdeInput(eagerx.EngineNode):
-    @staticmethod
-    @eagerx.register.spec("CustomOdeInput", eagerx.EngineNode)
-    def spec(
-        spec,
+    @classmethod
+    def make(
+        cls,
         name: str,
         rate: float,
         default_action: List,
-        process: Optional[int] = eagerx.process.ENGINE,
         delay_state: bool = True,
         color: Optional[str] = "green",
     ):
         """OdeInput spec"""
+        spec = cls.get_specification()
+
         # Performs all the steps to fill-in the params with registered info about all functions.
         spec.initialize(CustomOdeInput)
 
         # Modify default node params
         spec.config.name = name
         spec.config.rate = rate
-        spec.config.process = process
+        spec.config.process = eagerx.process.ENGINE
         spec.config.inputs = ["tick", "action"]
         spec.config.outputs = ["action_applied"]
         spec.config.states = ["delay"] if delay_state else []
 
         # Set custom node params
         spec.config.default_action = default_action
+        return spec
 
-        # Set space converter for delay state
-        spec.states.delay.space_converter = eagerx.SpaceConverter.make("Space_Float32", low=0, high=0, dtype="float32")
-
-    def initialize(self, default_action):
+    def initialize(self, spec: NodeSpec, object_spec: ObjectSpec, simulator: Any):
         # We will probably use self.simulator[self.obj_name] in callback & reset.
         assert (
             self.process == eagerx.process.ENGINE
         ), "Simulation node requires a reference to the simulator, hence it must be launched in the Engine process"
-        self.obj_name = self.config["name"]
-        self.default_action = np.array(default_action)
+        self.obj_name = spec.config.name.split("/")[0]
+        self.default_action = np.array(spec.config.default_action)
+        self.simulator = simulator
 
-    @eagerx.register.states(delay=Float32)
-    def reset(self, delay=None):
-        self.simulator[self.obj_name]["input"] = np.squeeze(np.array(self.default_action))
+    @register.states(delay=Space(low=0, high=0, shape=(), dtype="float32"))
+    def reset(self, delay: np.ndarray = None):
+        self.simulator[self.obj_name]["input"] = self.default_action
         if delay is not None:
-            self.set_delay(delay.data, "inputs", "action")
+            self.set_delay(float(delay), "inputs", "action")
 
-    @eagerx.register.inputs(tick=UInt64, action=Float32MultiArray)
-    @eagerx.register.outputs(action_applied=Float32MultiArray)
+    @register.inputs(tick=Space(dtype="int64"), action=Space(dtype="float32"))
+    @register.outputs(action_applied=Space(dtype="float32"))
     def callback(
         self,
         t_n: float,
         tick: Optional[Msg] = None,
-        action: Optional[Float32MultiArray] = None,
+        action: Optional[Msg] = None,
     ):
         assert isinstance(self.simulator[self.obj_name], dict), (
             'Simulator object "%s" is not compatible with this simulation node.' % self.simulator[self.obj_name]
         )
 
         # Set action in simulator for next step.
-        self.simulator[self.obj_name]["input"] = np.squeeze(action.msgs[-1].data)
+        self.simulator[self.obj_name]["input"] = action.msgs[-1]
 
         # Send action that has been applied.
         return dict(action_applied=action.msgs[-1])

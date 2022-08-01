@@ -1,24 +1,94 @@
 # ROS packages required
-from eagerx import Object, Engine, initialize, log, process
-
-# Environment
-from eagerx.core.env import EagerxEnv
-from eagerx.core.graph import Graph
-from eagerx.wrappers import Flatten
+import eagerx
+from eagerx.core.specs import EngineSpec
+from eagerx.backends.single_process import SingleProcess
 
 # Implementation specific
-import eagerx.nodes  # Registers butterworth_filter # noqa # pylint: disable=unused-import
-import eagerx_ode  # Registers OdeEngine # noqa # pylint: disable=unused-import
-
-import eagerx_dcsc_setups  # Registers Pendulum # noqa # pylint: disable=unused-import
+from eagerx_dcsc_setups.pendulum.objects import Pendulum
+from eagerx_ode.engine import OdeEngine
 
 # Other
+from eagerx.wrappers.flatten import Flatten
+from gym.wrappers.rescale_action import RescaleAction
 import numpy as np
-
+from typing import Dict
 import pytest
 
-NP = process.NEW_PROCESS
-ENV = process.ENVIRONMENT
+NP = eagerx.process.NEW_PROCESS
+ENV = eagerx.process.ENVIRONMENT
+
+class PendulumEnv(eagerx.BaseEnv):
+    def __init__(self, name: str, rate: float, graph: eagerx.Graph, engine: EngineSpec):
+        """Initializes an environment with EAGERx dynamics.
+
+        :param name: The name of the environment. Everything related to this environment
+                     (parameters, topics, nodes, etc...) will be registered under namespace: "/[name]".
+        :param rate: The rate (Hz) at which the environment will run.
+        :param graph: The graph consisting of nodes and objects that describe the environment's dynamics.
+        :param engine: The physics engine that will govern the environment's dynamics.
+        :param eval: If True we will create an evaluation environment, i.e. not performing domain randomization.
+        """
+        # Make the backend specification
+        backend = SingleProcess.make()
+
+        self.eval = eval
+        # Maximum episode length
+        self.episode_length = 100
+
+        # Step counter
+        self.steps = None
+        super().__init__(name, rate, graph, engine, backend, force_start=True)
+
+    def step(self, action: Dict):
+        """A method that runs one timestep of the environment's dynamics.
+
+        :params action: A dictionary of actions provided by the agent.
+        :returns: A tuple (observation, reward, done, info).
+
+                  - observation: Dictionary of observations of the current timestep.
+
+                  - reward: amount of reward returned after previous action
+
+                  - done: whether the episode has ended, in which case further step() calls will return undefined results
+
+                  - info: contains auxiliary diagnostic information (helpful for debugging, and sometimes learning)
+        """
+        # Take step
+        obs = self._step(action)
+        self.steps += 1
+
+        # Extract observations
+        cos_th, sin_th, thdot = obs["angle_data"][0]
+        u = action["voltage"][0]
+
+        # Calculate reward
+        # We want to penalize the angle error, angular velocity and applied voltage
+        th = np.arctan2(sin_th, cos_th)
+        cost = th**2 + 0.1 * (thdot / (1 + 10 * abs(th))) ** 2 + 0.01 * u**2
+
+        # Determine done flag
+        done = self.steps > self.episode_length
+
+        # Set info:
+        info = {"TimeLimit.truncated": done}
+
+        return obs, -cost, done, info
+
+    def reset(self, states=None) -> Dict:
+        """Resets the environment to an initial state and returns an initial observation.
+
+        :returns: The initial observation.
+        """
+        # Determine reset states
+        if states is None:
+            states = self.state_space.sample()
+
+        # Perform reset
+        obs = self._reset(states)
+
+        # Reset step counter
+        self.steps = 0
+        return obs
 
 
 @pytest.mark.parametrize(
@@ -26,52 +96,32 @@ ENV = process.ENVIRONMENT
     [(3, 3, True, 0, ENV)],
 )
 def test_pendulum_ode(eps, steps, sync, rtf, p):
-    # Start roscore
-    roscore = initialize("eagerx_core", anonymous=True, log_level=log.WARN)
 
     # Define unique name for test environment
     name = f"{eps}_{steps}_{sync}_{p}"
-    engine_p = p
+
     rate = 30
+    image_rate = 15
+    seed = 1
+    np.random.seed(seed)
 
-    # Initialize empty graph
-    graph = Graph.create()
+    # Create pendulum object
+    pendulum = Pendulum.make("pendulum", actuators=["u"], sensors=["x", "image"], states=["model_state"])
 
-    # Create pendulum
-    pendulum = Object.make(
-        "Pendulum",
-        "pendulum",
-        sensors=["x"],
-        states=["model_state", "model_parameters"],
-    )
+    # Create graph
+    graph = eagerx.Graph.create()
     graph.add(pendulum)
+    graph.connect(action="voltage", target=pendulum.actuators.u, window=1)
+    graph.connect(source=pendulum.sensors.x, observation="angle_data", window=1)
+    graph.render(source=pendulum.sensors.image, rate=image_rate)
 
-    # Connect the nodes
-    graph.connect(action="action", target=pendulum.actuators.u)
-    graph.connect(source=pendulum.sensors.x, observation="observation", window=1)
+    # Open gui
+    # pendulum.gui(OdeEngine)
+    # graph.gui()
 
-    # Define engines
-    engine = Engine.make("OdeEngine", rate=rate, sync=sync, real_time_factor=rtf, process=engine_p)
-
-    # Define step function
-    def step_fn(prev_obs, obs, action, steps):
-        # Calculate reward
-        if len(obs["observation"][0]) == 2:
-            th, thdot = obs["observation"][0]
-            sin_th = np.sin(th)
-            cos_th = np.cos(th)
-        else:
-            sin_th, cos_th, thdot = 0, -1, 0
-        th = np.arctan2(sin_th, cos_th)
-        cost = th**2 + 0.1 * (thdot / (1 + 10 * abs(th))) ** 2
-        # Determine done flag
-        done = steps > 500
-        # Set info:
-        info = dict()
-        return obs, -cost, done, info
-
-    # Initialize Environment
-    env = Flatten(EagerxEnv(name=name, rate=rate, graph=graph, engine=engine, step_fn=step_fn))
+    engine = OdeEngine.make(rate=rate)
+    env = PendulumEnv(name=name, rate=rate, graph=graph, engine=engine)
+    env = RescaleAction(Flatten(env), min_action=-1.0, max_action=1.0)
 
     # First reset
     env.reset()
@@ -83,8 +133,6 @@ def test_pendulum_ode(eps, steps, sync, rtf, p):
         env.reset()
     print("\n[Finished]")
     env.shutdown()
-    if roscore:
-        roscore.shutdown()
     print("\n[Shutdown]")
 
 
@@ -105,94 +153,50 @@ def test_dfun(eps, steps, sync, rtf, p):
     :return:
     """
 
-    # Start roscore
-    roscore = initialize("eagerx_core", anonymous=True, log_level=log.WARN)
-
     # Define unique name for test environment
     name = f"{eps}_{steps}_{sync}_{p}"
     engine_p = p
     rate = 30
+    seed = 1
 
     # Initialize empty graphs
-    graph = Graph.create()
-    graph2 = Graph.create()
+    graph = eagerx.Graph.create()
+    graph2 = eagerx.Graph.create()
 
     # Create pendulum
-    pendulum = Object.make("Pendulum", "pendulum")
+    pendulum = Pendulum.make("pendulum")
     graph.add(pendulum)
 
-    pendulum2 = Object.make("Pendulum", "pendulum", Dfun=None)
+    pendulum2 = Pendulum.make("pendulum", Dfun=None)
     graph2.add(pendulum2)
 
     # Connect the nodes
-    graph.connect(action="action", target=pendulum.actuators.u)
-    graph.connect(source=pendulum.sensors.x, observation="observation", window=1)
+    graph.connect(action="voltage", target=pendulum.actuators.u)
+    graph.connect(source=pendulum.sensors.x, observation="angle_data", window=1)
     graph.render(pendulum.sensors.image, rate=10)
 
-    graph2.connect(action="action", target=pendulum2.actuators.u)
-    graph2.connect(source=pendulum2.sensors.x, observation="observation", window=1)
+    graph2.connect(action="voltage", target=pendulum2.actuators.u)
+    graph2.connect(source=pendulum2.sensors.x, observation="angle_data", window=1)
     graph2.render(pendulum2.sensors.image, rate=10)
 
     # Define engines
-    engine = Engine.make(
-        "OdeEngine",
+    engine = OdeEngine.make(
         rate=rate,
         sync=sync,
         real_time_factor=rtf,
         process=engine_p,
     )
 
-    # Define step function
-    def step_fn(prev_obs, obs, action, steps):
-        # Calculate reward
-        if len(obs["observation"][0]) == 2:
-            th, thdot = obs["observation"][0]
-            sin_th = np.sin(th)
-            cos_th = np.cos(th)
-        else:
-            sin_th, cos_th, thdot = 0, -1, 0
-        th = np.arctan2(sin_th, cos_th)
-        cost = th**2 + 0.1 * (thdot / (1 + 10 * abs(th))) ** 2
-        # Determine done flag
-        done = steps > 500
-        # Set info:
-        info = dict()
-        return obs, -cost, done, info
-
-    # Define reset function
-    def reset_fn(env):
-        state_dict = env.state_space.sample()
-        for key, value in state_dict.items():
-            if "model_state" in key:
-                state_dict[key] = value * 0.0
-        return state_dict
-
     # Initialize Environment
-    env = Flatten(
-        EagerxEnv(
-            name=name,
-            rate=rate,
-            graph=graph,
-            engine=engine,
-            step_fn=step_fn,
-            reset_fn=reset_fn,
-        )
-    )
-    env2 = Flatten(
-        EagerxEnv(
-            name=name + "2",
-            rate=rate,
-            graph=graph2,
-            engine=engine,
-            step_fn=step_fn,
-            reset_fn=reset_fn,
-        )
-    )
-    # env.render("human")
+    env = PendulumEnv(name=f"{name}", rate=rate, graph=graph, engine=engine)
+    env = RescaleAction(Flatten(env), min_action=-1.0, max_action=1.0)
+    env2 = PendulumEnv(name=f"{name}_2", rate=rate, graph=graph2, engine=engine)
+    env2 = RescaleAction(Flatten(env2), min_action=-1.0, max_action=1.0)
 
     # First reset
-    env.reset()
-    env2.reset()
+    states = env.state_space.sample()
+    env.reset(states=states)
+    env2.reset(states=states)
     action = env.action_space.sample()
     for j in range(eps):
         print("\n[Episode %s]" % j)
@@ -202,11 +206,10 @@ def test_dfun(eps, steps, sync, rtf, p):
 
             # Assert if result is the same with and without Jacobian
             assert np.allclose(obs, obs2)
-        env.reset()
-        env2.reset()
+        states = env.state_space.sample()
+        env.reset(states=states)
+        env2.reset(states=states)
     print("\n[Finished]")
     env.shutdown()
     env2.shutdown()
-    if roscore:
-        roscore.shutdown()
     print("\n[Shutdown]")
