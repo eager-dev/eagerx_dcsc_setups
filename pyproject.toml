@@ -18,7 +18,7 @@ eagerx-reality = "^0.1.11"
 tensorboard = "^2.9.0"
 
 [tool.poetry.dev-dependencies]
-black = "^22.3.0"
+black = "^22.6.0"
 pytest = "^7.1"
 pytest-cov = "^3.0.0"
 flake8= ">=3"
