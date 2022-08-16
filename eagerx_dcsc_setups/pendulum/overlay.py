@@ -1,18 +1,15 @@
 import eagerx
-import rospy
-from eagerx import register
+from eagerx import register, Space
+from eagerx.core.specs import NodeSpec
 from eagerx.utils.utils import Msg
-from std_msgs.msg import Float32MultiArray, Float32
-from sensor_msgs.msg import Image
 import cv2
 import numpy as np
 
 
 class Overlay(eagerx.Node):
-    @staticmethod
-    @register.spec("Overlay", eagerx.Node)
-    def spec(
-        spec,
+    @classmethod
+    def make(
+        cls,
         name: str,
         rate: float,
         process: int = eagerx.process.ENVIRONMENT,
@@ -21,7 +18,7 @@ class Overlay(eagerx.Node):
     ):
         """Overlay spec"""
         # Fills spec with defaults parameters
-        spec.initialize(Overlay)
+        spec = cls.get_specification()
 
         # Adjust default params
         spec.config.update(
@@ -29,35 +26,26 @@ class Overlay(eagerx.Node):
         )
 
         spec.config.user_name = user_name
+        return spec
 
-    def initialize(self, user_name: str = None):
-        self.user_name = user_name
+    def initialize(self, spec: NodeSpec):
+        self.user_name = spec.config.user_name
 
     @register.states()
     def reset(self):
         pass
 
-    def _convert_to_cv_image(self, img):
-        if isinstance(img.data, bytes):
-            cv_image = np.frombuffer(img.data, dtype=np.uint8).reshape(img.height, img.width, -1)
-        else:
-            cv_image = np.array(img.data, dtype=np.uint8).reshape(img.height, img.width, -1)
-        if "rgb" in img.encoding:
-            cv_image = cv2.cvtColor(cv_image, cv2.COLOR_RGB2BGR)
-        return cv_image
-
-    @register.inputs(base_image=Image, u=Float32MultiArray, x=Float32MultiArray)
-    @register.outputs(image=Image)
+    @register.inputs(base_image=Space(dtype="uint8"), u=Space(low=[-2], high=[2]), x=Space(dtype="float32"))
+    @register.outputs(image=Space(dtype="uint8"))
     def callback(self, t_n: float, base_image: Msg, u: Msg, x: Msg):
-        if len(base_image.msgs[-1].data) > 0:
-            u = u.msgs[-1].data[0] if u else 0
-            theta = x.msgs[-1].data[0]
+        if len(base_image.msgs[-1]) > 1:
+            u = u.msgs[-1][0] if u and u.msgs and u.msgs[-1] else 0
+            theta = x.msgs[-1][0]
             theta = theta - 2 * np.pi * np.floor((theta + np.pi) / (2 * np.pi))
 
             # Set background image from base_image
-            img = self._convert_to_cv_image(base_image.msgs[-1])
-            width = base_image.msgs[-1].width
-            height = base_image.msgs[-1].height
+            img = base_image.msgs[-1]
+            height, width, _ = img.shape
             side_length = min(width, height)
 
             # Put text
@@ -102,10 +90,6 @@ class Overlay(eagerx.Node):
 
             img = cv2.rectangle(img, (info_x, height - 2 * info_height), (info_x + info_width, height), (255, 255, 255), -1)
             img = cv2.putText(img, info, (info_x, info_y), font, 2 / 3, (0, 0, 0), thickness=2)
-
-            # Prepare image for transmission.
-            data = img.tobytes("C")
-            msg = Image(data=data, height=height, width=width, encoding="bgr8", step=3 * width)
-            return dict(image=msg)
+            return dict(image=img)
         else:
-            return dict(image=Image())
+            return dict(image=np.zeros((0, 0, 3), dtype="uint8"))

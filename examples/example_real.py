@@ -1,172 +1,187 @@
 # ROS packages required
 import eagerx
-from eagerx import Object, Engine, Node, process
-
-eagerx.initialize("eagerx_core", anonymous=True, log_level=eagerx.log.INFO)
+from eagerx.backends.single_process import SingleProcess
+from eagerx.backends.ros1 import Ros1
 
 # Environment
-from eagerx.core.env import EagerxEnv
-from eagerx.core.graph import Graph
 from eagerx.wrappers import Flatten
 
 # Implementation specific
-import eagerx.nodes  # Registers butterworth_filter # noqa # pylint: disable=unused-import
-import eagerx_ode  # Registers OdeEngine # noqa # pylint: disable=unused-import
-import eagerx_reality  # Registers RealEngine # noqa # pylint: disable=unused-import
-import eagerx_dcsc_setups.pendulum  # Registers Pendulum # noqa # pylint: disable=unused-import
+from eagerx_ode.engine import OdeEngine
+from eagerx_reality.engine import RealEngine
+from eagerx_dcsc_setups.pendulum.objects import Pendulum
+from eagerx_dcsc_setups.pendulum.nodes import ResetAngle
+from eagerx_dcsc_setups.pendulum.overlay import Overlay
+
+# Stable Baselines 3 and Gym
+import stable_baselines3 as sb3
+from stable_baselines3.common.env_checker import check_env
+from gym.wrappers.rescale_action import RescaleAction
 
 # Other
+from typing import Dict
 import numpy as np
 import rospy
-from functools import partial
 
 
-def make_graph(
-    sensor_rate: float,
-    actuator_rate: float,
-    image_rate: float,
-    evaluation: bool,
-):
-    u_limit = 2.0
-    states = ["model_state"]
+class PendulumEnv(eagerx.BaseEnv):
+    def __init__(self, name: str, rate: float, eval=False):
+        """Initializes an environment with EAGERx dynamics.
 
-    # Create empty graph
-    graph = Graph.create()
+        :param name: The name of the environment. Everything related to this environment
+                     (parameters, topics, nodes, etc...) will be registered under namespace: "/[name]".
+        :param rate: The rate (Hz) at which the environment will run.
+        :param self.graph: The self.graph consisting of nodes and objects that describe the environment's dynamics.
+        :param engine: The physics engine that will govern the environment's dynamics.
+        :param eval: If True we will create an evaluation environment, i.e. not performing domain randomization.
+        """
+        self.rate = rate
+        self.eval = eval
 
-    # Create pendulum
-    pendulum = Object.make(
-        "Pendulum",
-        "pendulum",
-        render_shape=[480, 480],
-        sensors=["x"],
-        states=states,
-        sensor_rate=sensor_rate,
-        actuator_rate=actuator_rate,
-        image_rate=image_rate,
-    )
-    graph.add(pendulum)
+        # Make the backend specification
+        backend = Ros1.make(log_level=eagerx.core.constants.INFO) if eval else SingleProcess.make()
 
-    # Create Butterworth filter
-    bf = Node.make(
-        "ButterworthFilter",
-        name="butterworth_filter",
-        rate=sensor_rate,
-        N=2,
-        Wn=13,
-        process=process.NEW_PROCESS,
-    )
-    bf.inputs.signal.space_converter = pendulum.actuators.u.space_converter
-    bf.outputs.filtered.space_converter = pendulum.actuators.u.space_converter
-    graph.add(bf)
+        # Create Engine
+        engine = RealEngine.make(rate=rate, sync=True) if eval else OdeEngine.make(rate=rate)
 
-    if evaluation:
-        reset = eagerx.ResetNode.make("ResetAngle", "reset_angle", sensor_rate, u_range=[-u_limit, +u_limit])
-        graph.add(reset)
+        # Maximum episode length
+        self.episode_length = 300 if eval else 100
 
-        graph.connect(source=pendulum.states.model_state, target=reset.targets.goal)
-        graph.connect(action="voltage", target=reset.feedthroughs.u)
-        graph.connect(source=reset.outputs.u, target=bf.inputs.signal)
-        graph.connect(source=pendulum.sensors.x, target=reset.inputs.x)
-    else:
-        graph.connect(action="voltage", target=bf.inputs.signal)
-    graph.connect(source=bf.outputs.filtered, target=pendulum.actuators.u)
-    graph.connect(source=pendulum.sensors.x, observation="angle_data")
-    graph.connect(source=bf.outputs.filtered, observation="action_applied", skip=True, initial_obs=[0], window=1)
+        # Make graph
+        self._make_graph()
+        self.graph.gui()
 
-    # Add rendering
-    graph.add_component(pendulum.sensors.image)
-    layover = Node.make("Overlay", "overlay", rate=image_rate)
-    graph.add(layover)
-    graph.connect(source=pendulum.sensors.x, target=layover.inputs.x)
-    graph.connect(source=bf.outputs.filtered, target=layover.inputs.u)
-    graph.connect(source=pendulum.sensors.image, target=layover.inputs.base_image)
-    graph.render(source=layover.outputs.image, rate=image_rate, display=True)
+        # Step counter
+        self.steps = None
+        super().__init__(name, rate, self.graph, engine, backend, force_start=True)
 
-    return graph, pendulum
+    def step(self, action: Dict):
+        """A method that runs one timestep of the environment's dynamics.
 
+        :params action: A dictionary of actions provided by the agent.
+        :returns: A tuple (observation, reward, done, info).
 
-if __name__ == "__main__":
-    # Define rates
-    sensor_rate = 30.0
-    actuator_rate = 30.0
-    image_rate = sensor_rate / 2
-    engine_rate = max([sensor_rate, actuator_rate, image_rate])
-    algorithm = {"name": "SAC", "sim_params": {}, "real_params": {"ent_coef": "auto_0.1"}}
+                  - observation: Dictionary of observations of the current timestep.
 
-    seed = 1
-    length_train_eps = 100
-    length_eval_eps = 270
-    sim_eps = 100
+                  - reward: amount of reward returned after previous action
 
-    train_graph, pendulum = make_graph(
-        sensor_rate=sensor_rate, actuator_rate=actuator_rate, image_rate=image_rate, evaluation=False
-    )
-    eval_graph, _ = make_graph(sensor_rate=sensor_rate, actuator_rate=actuator_rate, image_rate=image_rate, evaluation=True)
+                  - done: whether the episode has ended, in which case further step() calls will return undefined results
 
-    # Show in the gui
-    # pendulum.gui("OdeEngine")
-    # pendulum.gui("RealEngine")
-    # graph.gui()
-    train_graph.gui()
-    pendulum.gui("OdeEngine")
-    pendulum.gui("RealEngine")
+                  - info: contains auxiliary diagnostic information (helpful for debugging, and sometimes learning)
+        """
+        # Take step
+        obs = self._step(action)
+        self.steps += 1
 
-    # Define engines
-    engine_ode = Engine.make("OdeEngine", rate=engine_rate, sync=True, real_time_factor=0, process=process.NEW_PROCESS)
-    engine_real = Engine.make("RealEngine", rate=engine_rate, sync=True, process=process.NEW_PROCESS)
-
-    # Define step function
-    def step_fn(prev_obs, obs, action, steps, length_eps):
-        state = obs["angle_data"][0]
+        # Extract observations
+        cos_th, sin_th, thdot = obs["angle_data"][0]
         u = action["voltage"][0]
 
         # Calculate reward
-        cos_th, sin_th, thdot = state
+        # We want to penalize the angle error, angular velocity and applied voltage
         th = np.arctan2(sin_th, cos_th)
         cost = th**2 + 0.1 * (thdot / (1 + 10 * abs(th))) ** 2 + 0.01 * u**2
 
         # Determine done flag
-        done = steps > length_eps
+        done = self.steps > self.episode_length
+
         # Set info:
         info = {"TimeLimit.truncated": done}
+
         return obs, -cost, done, info
 
-    def reset_fn(env):
-        states = env.state_space.sample()
-        offset = np.random.rand() - 0.5
-        theta = np.pi - offset if offset > 0 else -np.pi - offset
-        states["pendulum/model_state"] = np.array([theta, 0], dtype="float32")
-        return states
+    def _make_graph(self):
+        u_limit = 2.0
+        sensor_rate = self.rate
+        actuator_rate = self.rate
+        image_rate = self.rate / 2
 
-    train_step_fn = partial(step_fn, length_eps=length_train_eps)
-    eval_step_fn = partial(step_fn, length_eps=length_eval_eps)
+        # Create empty self.graph
+        self.graph = eagerx.Graph.create()
 
-    # Initialize Environment
-    simulation_env = Flatten(
-        EagerxEnv(name="ode", rate=sensor_rate, graph=train_graph, engine=engine_ode, step_fn=train_step_fn)
-    )
-    real_env = Flatten(
-        EagerxEnv(name="real", rate=sensor_rate, graph=eval_graph, engine=engine_real, step_fn=eval_step_fn, reset_fn=reset_fn)
-    )
+        # Create pendulum
+        pendulum = Pendulum.make(
+            "pendulum",
+            render_shape=[480, 480],
+            actuators=["u"],
+            sensors=["x"],
+            states=["model_state"],
+            sensor_rate=sensor_rate,
+            actuator_rate=actuator_rate,
+            image_rate=image_rate,
+        )
+        self.graph.add(pendulum)
+
+        if self.eval:
+            reset = ResetAngle.make("reset_angle", sensor_rate, u_range=[-u_limit, +u_limit])
+            self.graph.add(reset)
+
+            self.graph.connect(source=pendulum.states.model_state, target=reset.targets.goal)
+            self.graph.connect(action="voltage", target=reset.feedthroughs.u)
+            self.graph.connect(source=reset.outputs.u, target=pendulum.actuators.u)
+            self.graph.connect(source=pendulum.sensors.x, target=reset.inputs.x)
+        else:
+            self.graph.connect(action="voltage", target=pendulum.actuators.u)
+        self.graph.connect(source=pendulum.sensors.x, observation="angle_data")
+
+        # Add rendering
+        self.graph.add_component(pendulum.sensors.image)
+        overlay = Overlay.make("overlay", rate=image_rate)
+        self.graph.add(overlay)
+        self.graph.connect(source=pendulum.sensors.x, target=overlay.inputs.x)
+        self.graph.connect(action="voltage", target=overlay.inputs.u, skip=True)
+        self.graph.connect(source=pendulum.sensors.image, target=overlay.inputs.base_image)
+        self.graph.render(source=overlay.outputs.image, rate=image_rate, display=True)
+
+    def reset(self) -> Dict:
+        """Resets the environment to an initial state and returns an initial observation.
+
+        :returns: The initial observation.
+        """
+        # Determine reset states
+        states = self.state_space.sample()
+        if self.eval:
+            # During evaluation on the real system we cannot set the state to an arbitrary position and velocity
+            offset = np.random.rand() - 0.5
+            theta = np.pi - offset if offset > 0 else -np.pi - offset
+            states["pendulum/model_state"] = np.array([theta, 0], dtype="float32")
+
+        # Perform reset
+        obs = self._reset(states)
+
+        # Reset step counter
+        self.steps = 0
+        return obs
+
+
+if __name__ == "__main__":
+    rate = 30
+    seed = 1
+
+    simulation_env = PendulumEnv("sim_env", rate, eval=False)
+    real_env = PendulumEnv("real_env", rate, eval=True)
+
+    # Flatten and scale envs
+    simulation_env = RescaleAction(Flatten(simulation_env), min_action=-1.0, max_action=1.0)
+    real_env = RescaleAction(Flatten(real_env), min_action=-1.0, max_action=1.0)
 
     # Seed envs
-    real_env.seed(seed)
     simulation_env.seed(seed)
+    real_env.seed(seed)
 
-    # Initialize learner (kudos to Antonin)
-    import stable_baselines3 as sb
-    sb_algorithm = getattr(sb, algorithm["name"])
-    model = sb_algorithm("MlpPolicy", simulation_env, verbose=1, seed=seed, **algorithm["sim_params"])
+    # Check simulation env validity
+    check_env(simulation_env)
 
     # First train in simulation
     simulation_env.render("human")
-    model.learn(total_timesteps=sim_eps * length_train_eps)
+    model = sb3.SAC("MlpPolicy", simulation_env, verbose=1, seed=seed, learning_rate=7e-4)
+    model.learn(total_timesteps=4_000)
     simulation_env.close()
 
     # Evaluate for 30 seconds in simulation
     rospy.loginfo("Start simulation evaluation!")
     obs = simulation_env.reset()
-    for i in range(int(30 * sensor_rate)):
+    for i in range(int(30 * rate)):
         action, _states = model.predict(obs, deterministic=True)
         obs, reward, done, info = simulation_env.step(action)
         if done:
@@ -175,15 +190,12 @@ if __name__ == "__main__":
     model.save("simulation")
     simulation_env.shutdown()
 
-    # Train on real system
-    model = sb_algorithm.load("simulation", env=real_env, seed=seed, **algorithm["real_params"])
-    real_env.render("human")
-
     # Evaluate on real system
+    real_env.render("human")
     rospy.loginfo("Start zero-shot evaluation!")
+    obs = real_env.reset()
     while True:
-        done = False
-        obs = real_env.reset()
-        while not done:
-            action, _states = model.predict(obs, deterministic=True)
-            obs, reward, done, info = real_env.step(action)
+        action, _states = model.predict(obs, deterministic=True)
+        obs, reward, done, info = real_env.step(action)
+        if done:
+            obs = real_env.reset()
