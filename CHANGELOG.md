@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.1.13 (2022-08-16)
+### Fix
+* Refactor due to changes eagerx ([`c93a525`](https://github.com/eager-dev/eagerx_dcsc_setups/commit/c93a52568cdd51e1fec33f9f698d32f9dbac124a))
+
 ## v0.1.12 (2022-07-25)
 ### Fix
 * Create scripts for tutorial at ICRA and update overlay ([`c92da75`](https://github.com/eager-dev/eagerx_dcsc_setups/commit/c92da75c1deb7e659020300ba301e72b68568c51))
