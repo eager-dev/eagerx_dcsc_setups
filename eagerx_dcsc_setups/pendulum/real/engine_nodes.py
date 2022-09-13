@@ -11,7 +11,7 @@ from dcsc_setups.srv import MopsWrite, MopsWriteRequest, MopsReadRequest, MopsRe
 # IMPORT EAGERX
 import eagerx
 from eagerx import register, Space
-from eagerx.core.specs import NodeSpec, ObjectSpec
+from eagerx.core.specs import NodeSpec
 from eagerx.utils.utils import Msg
 
 
@@ -32,7 +32,7 @@ class PendulumOutput(eagerx.EngineNode):
         spec.config.outputs = ["x"]
         return spec
 
-    def initialize(self, spec: NodeSpec, object_spec: ObjectSpec, simulator: Any):
+    def initialize(self, spec: NodeSpec, simulator: Any):
         self.service = rospy.ServiceProxy("/mops/read", MopsRead)
         self.service.wait_for_service()
 
@@ -71,7 +71,7 @@ class PendulumInput(eagerx.EngineNode):
         spec.inputs.u.window = 1
         return spec
 
-    def initialize(self, spec: NodeSpec, object_spec: ObjectSpec, simulator: Any):
+    def initialize(self, spec: NodeSpec, simulator: Any):
         assert spec.config.fixed_delay >= 0, "Delay must be non-negative."
         self.fixed_delay = spec.config.fixed_delay
         self.pub_act = rospy.Publisher("/mops/actuator_delay", Float32, queue_size=1)

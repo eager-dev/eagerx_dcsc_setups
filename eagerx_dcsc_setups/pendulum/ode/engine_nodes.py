@@ -1,6 +1,6 @@
 import eagerx
 from eagerx import Space, register
-from eagerx.core.specs import NodeSpec, ObjectSpec
+from eagerx.core.specs import NodeSpec
 from eagerx.utils.utils import Msg
 
 from typing import Optional, List, Any
@@ -35,18 +35,17 @@ class CustomOdeInput(eagerx.EngineNode):
         spec.config.default_action = default_action
         return spec
 
-    def initialize(self, spec: NodeSpec, object_spec: ObjectSpec, simulator: Any):
-        # We will probably use self.simulator[self.obj_name] in callback & reset.
+    def initialize(self, spec: NodeSpec, simulator: Any):
+        # We will probably use self.simulator in callback & reset.
         assert (
             self.process == eagerx.process.ENGINE
         ), "Simulation node requires a reference to the simulator, hence it must be launched in the Engine process"
-        self.obj_name = spec.config.name.split("/")[0]
         self.default_action = np.array(spec.config.default_action)
         self.simulator = simulator
 
     @register.states(delay=Space(low=0, high=0, shape=(), dtype="float32"))
     def reset(self, delay: np.ndarray = None):
-        self.simulator[self.obj_name]["input"] = self.default_action
+        self.simulator["input"] = self.default_action
         if delay is not None:
             self.set_delay(float(delay), "inputs", "action")
 
@@ -58,12 +57,8 @@ class CustomOdeInput(eagerx.EngineNode):
         tick: Optional[Msg] = None,
         action: Optional[Msg] = None,
     ):
-        assert isinstance(self.simulator[self.obj_name], dict), (
-            'Simulator object "%s" is not compatible with this simulation node.' % self.simulator[self.obj_name]
-        )
-
         # Set action in simulator for next step.
-        self.simulator[self.obj_name]["input"] = action.msgs[-1]
+        self.simulator["input"] = action.msgs[-1]
 
         # Send action that has been applied.
         return dict(action_applied=action.msgs[-1])
