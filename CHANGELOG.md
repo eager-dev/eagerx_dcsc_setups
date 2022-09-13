@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.1.14 (2022-09-13)
+### Fix
+* Refactor graph ([#49](https://github.com/eager-dev/eagerx_dcsc_setups/issues/49)) ([`971d516`](https://github.com/eager-dev/eagerx_dcsc_setups/commit/971d5162a08abbbb94d9b8aa802ba2855ee518d8))
+
 ## v0.1.13 (2022-08-16)
 ### Fix
 * Refactor due to changes eagerx ([`c93a525`](https://github.com/eager-dev/eagerx_dcsc_setups/commit/c93a52568cdd51e1fec33f9f698d32f9dbac124a))
