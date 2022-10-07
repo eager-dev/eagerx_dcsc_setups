@@ -140,16 +140,19 @@ class PendulumEnv(eagerx.BaseEnv):
         """
         # Determine reset states
         states = self.state_space.sample()
-        states["pendulum/model_parameters"] = np.array([
-            0.000159931461600856,
-            0.0508581731919534,
-            0.0415233722862552,
-            1.43298488358436e-05,
-            0.0333391179016334,
-            7.73125142447252,
-            0.000975041213361349,
-            165.417960777425,
-        ], dtype="float32")
+        states["pendulum/model_parameters"] = np.array(
+            [
+                0.000159931461600856,
+                0.0508581731919534,
+                0.0415233722862552,
+                1.43298488358436e-05,
+                0.0333391179016334,
+                7.73125142447252,
+                0.000975041213361349,
+                165.417960777425,
+            ],
+            dtype="float32",
+        )
         if self.eval:
             # During evaluation on the real system we cannot set the state to an arbitrary position and velocity
             offset = np.random.rand() - 0.5
