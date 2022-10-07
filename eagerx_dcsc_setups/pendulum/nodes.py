@@ -20,6 +20,7 @@ class ResetAngle(eagerx.ResetNode):
         timeout: float = 5.0,
         gains: Optional[List[float]] = None,
         u_range: Optional[List[float]] = None,
+        process: int = eagerx.NEW_PROCESS
     ) -> ResetNodeSpec:
         """This ResetAngle node resets the pendulum to a desired angle with zero angular velocity. Note that this controller
         only works properly when resetting the pendulum near the downward facing equilibrium.
@@ -38,7 +39,7 @@ class ResetAngle(eagerx.ResetNode):
         spec = cls.get_specification()
 
         # Modify default node params
-        spec.config.update(name=name, rate=rate, process=eagerx.process.ENVIRONMENT, color="grey")
+        spec.config.update(name=name, rate=rate, process=process, color="grey")
         spec.config.update(inputs=["x"], targets=["goal"], outputs=["u"])
         spec.config.update(u_range=u_range, threshold=threshold, timeout=timeout)
         spec.config.gains = gains if isinstance(gains, list) else [2.0, 0.2, 1.0]
