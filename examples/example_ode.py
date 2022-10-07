@@ -12,7 +12,6 @@ import numpy as np
 from typing import Dict
 
 
-
 class PendulumEnv(eagerx.BaseEnv):
     def __init__(self, name: str, rate: float, graph: eagerx.Graph, engine: EngineSpec):
         """Initializes an environment with EAGERx dynamics.
@@ -99,7 +98,7 @@ if __name__ == "__main__":
     graph = eagerx.Graph.create()
     graph.add(pendulum)
     graph.connect(action="voltage", target=pendulum.actuators.u, window=1)
-    graph.connect(source=pendulum.sensors.x,  observation="angle_data", window=1)
+    graph.connect(source=pendulum.sensors.x, observation="angle_data", window=1)
     graph.render(source=pendulum.sensors.image, rate=image_rate)
 
     # Open gui

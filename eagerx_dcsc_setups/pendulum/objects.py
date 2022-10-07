@@ -119,7 +119,7 @@ class Pendulum(eagerx.Object):
             shape=shape,
             render_fn=render_fn,
             rate=spec.sensors.image.rate,
-            process=eagerx.process.ENVIRONMENT,
+            process=eagerx.NEW_PROCESS,
         )
 
         # Create actuator engine nodes
@@ -152,15 +152,15 @@ class Pendulum(eagerx.Object):
 
         # Create sensor engine nodes
         # Rate=None, because we will connect them to sensors (thus uses the rate set in the agnostic specification)
-        obs = PendulumOutput.make("x", rate=spec.sensors.x.rate, process=0)
+        obs = PendulumOutput.make("x", rate=spec.sensors.x.rate, process=eagerx.NEW_PROCESS)
         image = CameraRender.make(
             "image",
             camera_idx=spec.config.camera_index,
             shape=spec.config.render_shape,
             rate=spec.sensors.image.rate,
-            process=eagerx.process.NEW_PROCESS,
+            process=eagerx.NEW_PROCESS,
         )
-        action = PendulumInput.make("u", rate=spec.actuators.u.rate, fixed_delay=0)
+        action = PendulumInput.make("u", rate=spec.actuators.u.rate, fixed_delay=0, process=eagerx.NEW_PROCESS)
 
         # Connect all engine nodes
         graph.add([obs, image, action])

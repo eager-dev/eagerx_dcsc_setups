@@ -12,7 +12,7 @@ class Overlay(eagerx.Node):
         cls,
         name: str,
         rate: float,
-        process: int = eagerx.process.ENVIRONMENT,
+        process: int = eagerx.process.NEW_PROCESS,
         color: str = "cyan",
         user_name: str = None,
     ):
