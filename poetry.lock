@@ -26,7 +26,7 @@ python-versions = ">=3.5"
 dev = ["cloudpickle", "coverage[toml] (>=5.0.2)", "furo", "hypothesis", "mypy (>=0.900,!=0.940)", "pre-commit", "pympler", "pytest (>=4.3.0)", "pytest-mypy-plugins", "sphinx", "sphinx-notfound-page", "zope.interface"]
 docs = ["furo", "sphinx", "sphinx-notfound-page", "zope.interface"]
 tests = ["cloudpickle", "coverage[toml] (>=5.0.2)", "hypothesis", "mypy (>=0.900,!=0.940)", "pympler", "pytest (>=4.3.0)", "pytest-mypy-plugins", "zope.interface"]
-tests_no_zope = ["cloudpickle", "coverage[toml] (>=5.0.2)", "hypothesis", "mypy (>=0.900,!=0.940)", "pympler", "pytest (>=4.3.0)", "pytest-mypy-plugins"]
+tests-no-zope = ["cloudpickle", "coverage[toml] (>=5.0.2)", "hypothesis", "mypy (>=0.900,!=0.940)", "pympler", "pytest (>=4.3.0)", "pytest-mypy-plugins"]
 
 [[package]]
 name = "babel"
@@ -103,7 +103,7 @@ optional = false
 python-versions = ">=3.6.0"
 
 [package.extras]
-unicode_backport = ["unicodedata2"]
+unicode-backport = ["unicodedata2"]
 
 [[package]]
 name = "click"
@@ -311,7 +311,7 @@ six = ">=1.9.0"
 
 [package.extras]
 aiohttp = ["aiohttp (>=3.6.2,<4.0.0dev)", "requests (>=2.20.0,<3.0.0dev)"]
-enterprise_cert = ["cryptography (==36.0.2)", "pyopenssl (==22.0.0)"]
+enterprise-cert = ["cryptography (==36.0.2)", "pyopenssl (==22.0.0)"]
 pyopenssl = ["pyopenssl (>=20.0.0)"]
 reauth = ["pyu2f (>=0.1.5)"]
 
@@ -361,12 +361,12 @@ accept-rom-license = ["autorom[accept-rom-license] (>=0.4.2,<0.5.0)"]
 all = ["ale-py (>=0.7.1,<0.8.0)", "ale-py (>=0.7.1,<0.8.0)", "box2d-py (==2.3.5)", "box2d-py (==2.3.5)", "lz4 (>=3.1.0)", "lz4 (>=3.1.0)", "mujoco_py (>=1.50,<2.0)", "mujoco_py (>=1.50,<2.0)", "pyglet (>=1.4.0)", "pyglet (>=1.4.0)", "pyglet (>=1.4.0)", "pyglet (>=1.4.0)", "scipy (>=1.4.1)", "scipy (>=1.4.1)"]
 atari = ["ale-py (>=0.7.1,<0.8.0)"]
 box2d = ["box2d-py (==2.3.5)", "pyglet (>=1.4.0)"]
-classic_control = ["pyglet (>=1.4.0)"]
+classic-control = ["pyglet (>=1.4.0)"]
 mujoco = ["mujoco_py (>=1.50,<2.0)"]
 nomujoco = ["ale-py (>=0.7.1,<0.8.0)", "box2d-py (==2.3.5)", "lz4 (>=3.1.0)", "pyglet (>=1.4.0)", "pyglet (>=1.4.0)", "scipy (>=1.4.1)"]
 other = ["lz4 (>=3.1.0)"]
 robotics = ["mujoco_py (>=1.50,<2.0)"]
-toy_text = ["scipy (>=1.4.1)"]
+toy-text = ["scipy (>=1.4.1)"]
 
 [[package]]
 name = "idna"
@@ -836,7 +836,7 @@ urllib3 = ">=1.21.1,<1.27"
 
 [package.extras]
 socks = ["PySocks (>=1.5.6,!=1.5.7)"]
-use_chardet_on_py3 = ["chardet (>=3.0.2,<6)"]
+use-chardet-on-py3 = ["chardet (>=3.0.2,<6)"]
 
 [[package]]
 name = "requests-oauthlib"
@@ -987,7 +987,7 @@ Sphinx = ">=4.5"
 
 [package.extras]
 testing = ["covdefaults (>=2.2)", "coverage (>=6.3)", "diff-cover (>=6.4)", "nptyping (>=2.1.2)", "pytest (>=7.1)", "pytest-cov (>=3)", "sphobjinv (>=2)", "typing-extensions (>=4.1)"]
-type_comments = ["typed-ast (>=1.5.2)"]
+type-comments = ["typed-ast (>=1.5.2)"]
 
 [[package]]
 name = "sphinx-rtd-theme"
@@ -1110,11 +1110,11 @@ widechars = ["wcwidth"]
 
 [[package]]
 name = "tensorboard"
-version = "2.10.0"
+version = "2.11.0"
 description = "TensorBoard lets you watch Tensors Flow"
 category = "main"
 optional = false
-python-versions = ">=3.6"
+python-versions = ">=3.7"
 
 [package.dependencies]
 absl-py = ">=0.4"
@@ -1123,7 +1123,7 @@ google-auth-oauthlib = ">=0.4.1,<0.5"
 grpcio = ">=1.24.3"
 markdown = ">=2.6.8"
 numpy = ">=1.12.0"
-protobuf = ">=3.9.2,<3.20"
+protobuf = ">=3.9.2,<4"
 requests = ">=2.21.0,<3"
 setuptools = ">=41.0.0"
 tensorboard-data-server = ">=0.6.0,<0.7.0"
@@ -1914,6 +1914,9 @@ pyqt6-sip = [
     {file = "PyQt6_sip-13.4.0-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:3ac7e0800180202dcc0c7035ff88c2a6f4a0f5acb20c4a19f71d807d0f7857b7"},
     {file = "PyQt6_sip-13.4.0-cp310-cp310-manylinux1_x86_64.whl", hash = "sha256:bb4f2e2fdcf3a8dafe4256750bbedd9e7107c4fd8afa9c25be28423c36bb12b8"},
     {file = "PyQt6_sip-13.4.0-cp310-cp310-win_amd64.whl", hash = "sha256:de601187055d684b36ebe6e800a5deacaa55b69d71ad43312b76422cfeae0e12"},
+    {file = "PyQt6_sip-13.4.0-cp311-cp311-macosx_10_9_universal2.whl", hash = "sha256:e3b17308ca729bcb6d25c01144c6b2e17d40812231c3ef9caaa72a78db2b1069"},
+    {file = "PyQt6_sip-13.4.0-cp311-cp311-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:d51704d50b82713fd7c928b7deb31e17be239ddac74fc2fd708e52bd21ecea3a"},
+    {file = "PyQt6_sip-13.4.0-cp311-cp311-win_amd64.whl", hash = "sha256:77af9c7e3f50414ec5af9b1534aaf2ba25115ae65aa5ed735111c8ef0884b862"},
     {file = "PyQt6_sip-13.4.0-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:83b446d247a92d119d507dbc94fc1f47389d8118a5b6232a2859951157319a30"},
     {file = "PyQt6_sip-13.4.0-cp37-cp37m-manylinux1_x86_64.whl", hash = "sha256:802b0cfed19900183220c46895c2635f0dd062f2d275a25506423f911ef74db4"},
     {file = "PyQt6_sip-13.4.0-cp37-cp37m-win_amd64.whl", hash = "sha256:2694ae67811cefb6ea3ee0e9995755b45e4952f4dcadec8c04300fd828f91c75"},
@@ -2093,7 +2096,7 @@ tabulate = [
     {file = "tabulate-0.8.10.tar.gz", hash = "sha256:6c57f3f3dd7ac2782770155f3adb2db0b1a269637e42f27599925e64b114f519"},
 ]
 tensorboard = [
-    {file = "tensorboard-2.10.0-py3-none-any.whl", hash = "sha256:76c91a5e8959cd2208cc32cb17a0cb002badabb66a06ac2af02a7810f49a59e3"},
+    {file = "tensorboard-2.11.0-py3-none-any.whl", hash = "sha256:a0e592ee87962e17af3f0dce7faae3fbbd239030159e9e625cce810b7e35c53d"},
 ]
 tensorboard-data-server = [
     {file = "tensorboard_data_server-0.6.1-py3-none-any.whl", hash = "sha256:809fe9887682d35c1f7d1f54f0f40f98bb1f771b14265b453ca051e2ce58fca7"},
