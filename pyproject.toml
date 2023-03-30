@@ -16,6 +16,8 @@ eagerx-gui = "^0.2.14"
 eagerx-ode = "^0.1.26"
 eagerx-reality = "^0.1.12"
 tensorboard = "^2.9.0"
+tqdm = "^4.65.0"
+moviepy = "^1.0.3"
 
 [tool.poetry.dev-dependencies]
 black = "^22.3.0"

@@ -1,0 +1,41 @@
+train:
+  repetitions: 5
+  disp: False
+  t_max: 5
+  learning_rate: 0.0007
+  device: cuda
+
+settings:
+  baseline_gym:
+    rate: 20
+    actuator_rate: 20
+    engine: gym
+    mass_low: 0.05
+    mass_high: 0.05
+    length_low: 0.1
+    length_high: 0.1
+    total_timesteps: 5000
+  domain_randomization:
+    rate: 20
+    actuator_rate: 20
+    engine: gym
+    mass_low: 0.04
+    mass_high: 0.06
+    length_low: 0.08
+    length_high: 0.12
+    total_timesteps: 5000
+  baseline_ode:
+    rate: 30
+    actuator_rate: 90
+    engine: ode
+    total_timesteps: 20000
+    window_x: 2
+    action_applied: True
+  delay:
+    rate: 30
+    actuator_rate: 90
+    engine: ode
+    delay: 1  # in time steps
+    total_timesteps: 20000
+    window_x: 2
+    action_applied: True

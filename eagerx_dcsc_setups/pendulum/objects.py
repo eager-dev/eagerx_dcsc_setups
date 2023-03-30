@@ -8,6 +8,7 @@ from eagerx_reality.engine import RealEngine
 from eagerx_ode.engine import OdeEngine
 from eagerx.core.specs import ObjectSpec
 from eagerx.core.graph_engine import EngineGraph
+from eagerx.engines.openai_gym.engine import GymEngine
 
 
 class Pendulum(eagerx.Object):
@@ -19,7 +20,12 @@ class Pendulum(eagerx.Object):
     )
     @register.actuators(u=Space(low=[-2], high=[2], dtype="float32"))
     @register.engine_states(
-        model_state=Space(low=[-np.pi, -9], high=[np.pi, 9], dtype="float32"), model_parameters=Space(dtype="float32")
+        model_state=Space(low=[-np.pi, -9], high=[np.pi, 9], dtype="float32"),
+        model_parameters=Space(dtype="float32"),
+        mass=Space(low=0.04, high=0.04, shape=(), dtype="float32"),
+        length=Space(low=0.04, high=0.04, shape=(), dtype="float32"),
+        max_speed=Space(low=22, high=22, shape=(), dtype="float32"),
+        dt=Space(low=0.05, high=0.05, shape=(), dtype="float32"),
     )
     def make(
         cls,
@@ -38,8 +44,9 @@ class Pendulum(eagerx.Object):
         spec = cls.get_specification()
 
         spec.config.name = name
+        spec.config.seed = 1
         spec.config.sensors = sensors if sensors else ["x", "image"]
-        spec.config.actuators = ["u"]
+        spec.config.actuators = actuators if actuators else ["u"]
         spec.config.states = states if states else ["model_state"]
 
         # Add custom agnostic params
@@ -49,7 +56,7 @@ class Pendulum(eagerx.Object):
         spec.config.Dfun = Dfun if Dfun else "eagerx_dcsc_setups.pendulum.ode.pendulum_ode/pendulum_dfun"
 
         # Set observation properties: (rate, etc...)
-        spec.sensors.action_applied.rate = sensor_rate
+        spec.sensors.action_applied.rate = actuator_rate
         spec.sensors.image.rate = image_rate
         from eagerx_dcsc_setups.pendulum.processors import AngleDecomposition
 
@@ -105,10 +112,15 @@ class Pendulum(eagerx.Object):
         from eagerx_ode.engine_states import OdeEngineState, OdeParameters
         from eagerx_dcsc_setups.pendulum.ode.engine_nodes import CustomOdeInput
         from eagerx_ode.engine_nodes import OdeOutput, OdeRender
+        from eagerx_dcsc_setups.pendulum.ode.engine_states import DummyState
 
         # Create engine_states (no agnostic states defined in this case)
         spec.engine.states.model_state = OdeEngineState.make()
         spec.engine.states.model_parameters = OdeParameters.make(list(range(7)))
+        spec.engine.states.mass = DummyState.make()
+        spec.engine.states.length = DummyState.make()
+        spec.engine.states.max_speed = DummyState.make()
+        spec.engine.states.dt = DummyState.make()
 
         # Create sensor engine nodes
         obs = OdeOutput.make("x", rate=spec.sensors.x.rate, process=2)
@@ -124,9 +136,10 @@ class Pendulum(eagerx.Object):
 
         # Create actuator engine nodes
         action = CustomOdeInput.make(
-            "pendulum_actuator",
+            "u",
             rate=spec.actuators.u.rate,
             default_action=[0],
+            delay_state=True,
         )
 
         # Connect all engine nodes
@@ -136,6 +149,7 @@ class Pendulum(eagerx.Object):
         graph.connect(source=image.outputs.image, sensor="image")
         graph.connect(source=action.outputs.action_applied, target=image.inputs.action_applied, skip=True)
         graph.connect(actuator="u", target=action.inputs.action)
+        graph.connect(source=action.outputs.action_applied, sensor="action_applied")
 
     @staticmethod
     @register.engine(RealEngine)  # This decorator pre-initializes engine implementation with default object_params
@@ -149,6 +163,10 @@ class Pendulum(eagerx.Object):
         # Couple engine states
         spec.engine.states.model_state = RandomActionAndSleep.make(sleep_time=1.0, repeat=1)
         spec.engine.states.model_parameters = DummyState.make()
+        spec.engine.states.mass = DummyState.make()
+        spec.engine.states.length = DummyState.make()
+        spec.engine.states.max_speed = DummyState.make()
+        spec.engine.states.dt = DummyState.make()
 
         # Create sensor engine nodes
         # Rate=None, because we will connect them to sensors (thus uses the rate set in the agnostic specification)
@@ -171,3 +189,61 @@ class Pendulum(eagerx.Object):
 
         # Check graph validity (commented out)
         # graph.is_valid(plot=True)
+
+    @register.engine(GymEngine)
+    def gym_engine(spec: eagerx.specs.ObjectSpec, graph: eagerx.EngineGraph):
+        """Engine-specific implementation (GymEngine) of the Pendulum object."""
+        # Import the openai engine-specific nodes (ObservationSensor, ActionActuator, GymImage)
+        from eagerx.engines.openai_gym.enginenodes import ObservationSensor, ActionActuator, GymImage
+
+        # Import the tutorial engine-specific nodes (FloatOutput)
+        from eagerx_dcsc_setups.pendulum.gym.engine_nodes import FloatOutput
+
+        # Set engine-specific parameters
+        spec.engine.env_id = "Pendulum-v1"
+        spec.engine.seed = spec.config.seed
+
+        # Create engine states that implement the registered states
+        # Note: The GymEngine implementation unfortunately does not support setting the OpenAI environment state,
+        #       nor does it support changing the dynamic parameters.
+        #       However, you could create an Engine specifically for the Pendulum-v1 environment.
+        from eagerx_dcsc_setups.pendulum.gym.engine_states import DummyState, SetGymAttribute
+
+        spec.engine.states.model_state = DummyState.make()  # Use dummy state, so it can still be selected.
+        spec.engine.states.model_parameters = DummyState.make()  # Use dummy state (same reason as above).
+        spec.engine.states.mass = SetGymAttribute.make(attribute="m")
+        spec.engine.states.length = SetGymAttribute.make(attribute="l")
+        spec.engine.states.max_speed = SetGymAttribute.make(attribute="max_speed")
+        spec.engine.states.dt = SetGymAttribute.make(attribute="dt")
+
+        # Create sensor engine nodes.
+        image = GymImage.make("image", rate=spec.sensors.image.rate, shape=spec.config.render_shape)
+        obs = ObservationSensor.make("obs", rate=spec.sensors.x.rate, process=2)
+
+        from eagerx_dcsc_setups.pendulum.gym.processor import ObsWithDecomposedAngle
+
+        obs.outputs.observation.processor = ObsWithDecomposedAngle.make(convert_to="theta_theta_dot")
+
+        x = FloatOutput.make("x", rate=spec.sensors.x.rate, idx=[0, 1])
+        # Create actuator engine node
+        action = ActionActuator.make("u", rate=spec.actuators.u.rate, process=2, zero_action=[0], delay_state=True)
+
+        # Add all engine nodes to the engine-specific graph
+        graph.add([obs, x, image, action])
+
+        # x
+        graph.connect(source=obs.outputs.observation, target=x.inputs.observation_array)
+        graph.connect(source=x.outputs.observation, sensor="x")
+
+        # image
+        graph.connect(source=image.outputs.image, sensor="image")
+
+        # u
+        # Note: not to be confused with sensor "u", for which we do not provide an implementation here.
+        # Note: We add a processor that negates the action, as the torque in OpenAI gym is defined counter-clockwise.
+        from eagerx_dcsc_setups.pendulum.gym.processor import VoltageToMotorTorque
+
+        action.inputs.action.processor = VoltageToMotorTorque.make(K=0.03333, R=7.731)
+        action.outputs.action_applied.processor = VoltageToMotorTorque.make(K=7.731, R=0.03333)
+        graph.connect(actuator="u", target=action.inputs.action)
+        graph.connect(source=action.outputs.action_applied, sensor="action_applied")
