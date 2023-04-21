@@ -8,6 +8,7 @@ from eagerx_ode.engine import OdeEngine
 from eagerx_dcsc_setups.pendulum.nodes import ResetAngle
 
 # Common imports
+import numpy as np
 import os
 import yaml
 from pathlib import Path
@@ -47,7 +48,7 @@ def create_env(
     pendulum.config.seed = seed
 
     env = PendulumEnv(
-        name=f"ArmEnv{seed}",
+        name=f"ArmEnv_{setting}_{seed}",
         graph=graph,
         engine=engine,
         backend=backend,
@@ -132,7 +133,8 @@ if __name__ == "__main__":
 
             graph.disconnect(action="voltage", target=pendulum.actuators.u)
 
-            reset = ResetAngle.make("reset_angle", rate, u_range=[-2, 2], process=eagerx.NEW_PROCESS)
+            gains = np.array([2.0, 0.2, 1.0]) * 30 / actuator_rate
+            reset = ResetAngle.make("reset_angle", rate, u_range=[-2, 2], gains=gains, process=eagerx.NEW_PROCESS)
             graph.add(reset)
 
             graph.connect(source=pendulum.states.model_state, target=reset.targets.goal)
@@ -151,6 +153,8 @@ if __name__ == "__main__":
 
             print(f"Starting recording for {setting} {repetition}")
             video_buffer = []
+            # TODO: Fix extra reset
+            # obs = eval_env.reset()
             for i in tqdm(range(episodes)):
                 obs = eval_env.reset()
                 done = False

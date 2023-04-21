@@ -22,6 +22,7 @@ from gym.wrappers.rescale_action import RescaleAction
 from typing import Dict
 import numpy as np
 import rospy
+from pathlib import Path
 
 
 class PendulumEnv(eagerx.BaseEnv):
@@ -39,17 +40,19 @@ class PendulumEnv(eagerx.BaseEnv):
         self.eval = eval
 
         # Make the backend specification
-        backend = Ros1.make(log_level=eagerx.core.constants.INFO) if eval else SingleProcess.make()
+        # backend = Ros1.make(log_level=eagerx.core.constants.INFO) if eval else SingleProcess.make()
+        backend = Ros1.make(log_level=eagerx.core.constants.INFO)
 
         # Create Engine
         engine = RealEngine.make(rate=rate, sync=True, process=eagerx.NEW_PROCESS) if eval else OdeEngine.make(rate=rate)
+        # engine = OdeEngine.make(rate=rate, real_time_factor=1.0) if eval else OdeEngine.make(rate=rate)
 
         # Maximum episode length
         self.episode_length = 300 if eval else 100
 
         # Make graph
         self._make_graph()
-        self.graph.gui()
+        # self.graph.gui()
 
         # Step counter
         self.steps = None
@@ -112,7 +115,8 @@ class PendulumEnv(eagerx.BaseEnv):
         )
         self.graph.add(pendulum)
 
-        if self.eval:
+        # if self.eval:
+        if True:
             reset = ResetAngle.make("reset_angle", sensor_rate, u_range=[-u_limit, +u_limit], process=eagerx.NEW_PROCESS)
             self.graph.add(reset)
 
@@ -122,6 +126,7 @@ class PendulumEnv(eagerx.BaseEnv):
             self.graph.connect(source=pendulum.sensors.x, target=reset.inputs.x)
         else:
             self.graph.connect(action="voltage", target=pendulum.actuators.u)
+
         self.graph.connect(source=pendulum.sensors.x, observation="angle_data")
 
         # Add rendering
@@ -140,19 +145,19 @@ class PendulumEnv(eagerx.BaseEnv):
         """
         # Determine reset states
         states = self.state_space.sample()
-        states["pendulum/model_parameters"] = np.array(
-            [
-                0.000159931461600856,
-                0.0508581731919534,
-                0.0415233722862552,
-                1.43298488358436e-05,
-                0.0333391179016334,
-                7.73125142447252,
-                0.000975041213361349,
-                165.417960777425,
-            ],
-            dtype="float32",
-        )
+        # states["pendulum/model_parameters"] = np.array(
+        #     [
+        #         0.000159931461600856,
+        #         0.0508581731919534,
+        #         0.0415233722862552,
+        #         1.43298488358436e-05,
+        #         0.0333391179016334,
+        #         7.73125142447252,
+        #         0.000975041213361349,
+        #         165.417960777425,
+        #     ],
+        #     dtype="float32",
+        # )
         if self.eval:
             # During evaluation on the real system we cannot set the state to an arbitrary position and velocity
             offset = np.random.rand() - 0.5
@@ -168,8 +173,12 @@ class PendulumEnv(eagerx.BaseEnv):
 
 
 if __name__ == "__main__":
-    rate = 30
+    rate = 20
     seed = 1
+
+    root = Path(__file__).parent.parent
+    train_log_dir = root / "exps" / "train" / "runs" / f"domain_randomization_0"
+    LOAD_DIR = str(train_log_dir) + f"/rl_model_5000_steps.zip"
 
     simulation_env = PendulumEnv("sim_env", rate, eval=False)
     real_env = PendulumEnv("real_env", rate, eval=True)
@@ -188,7 +197,7 @@ if __name__ == "__main__":
     # First train in simulation
     simulation_env.render("human")
     model = sb3.SAC("MlpPolicy", simulation_env, verbose=1, seed=seed, learning_rate=7e-4)
-    model.learn(total_timesteps=4_000)
+    # model.learn(total_timesteps=4_000)
     simulation_env.close()
 
     # Evaluate for 30 seconds in simulation
@@ -200,15 +209,25 @@ if __name__ == "__main__":
         if done:
             obs = simulation_env.reset()
 
-    model.save("simulation")
+    # model.save("simulation")
     simulation_env.shutdown()
+    model = sb3.SAC.load(LOAD_DIR)
 
     # Evaluate on real system
     real_env.render("human")
     rospy.loginfo("Start zero-shot evaluation!")
     obs = real_env.reset()
+    obs = real_env.reset()
+    i = 0
+    s = -1
     while True:
+        if i % 10 == 0:
+            s *= -1
         action, _states = model.predict(obs, deterministic=True)
+        # action = s*((2*i/600)*(action / action) - 1)
         obs, reward, done, info = real_env.step(action)
+        i += 1
         if done:
+            i = 0
+            s = -1
             obs = real_env.reset()

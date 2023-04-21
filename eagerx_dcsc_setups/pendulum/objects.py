@@ -186,6 +186,7 @@ class Pendulum(eagerx.Object):
         graph.connect(actuator="u", target=action.inputs.u)
         graph.connect(source=obs.outputs.x, target=action.inputs.x)
         graph.connect(source=image.outputs.image, sensor="image")
+        graph.connect(source=action.outputs.action_applied, sensor="action_applied")
 
         # Check graph validity (commented out)
         # graph.is_valid(plot=True)

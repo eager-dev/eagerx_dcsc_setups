@@ -34,10 +34,10 @@ def create_env(
         if parameter in cfg["settings"][setting]:
             param_dict[parameter] = cfg["settings"][setting][parameter]
 
-    if "delay" in cfg["settings"][setting]:
+    if "delay_low" in cfg["settings"][setting] and "delay_high" in cfg["settings"][setting]:
         rate = cfg["settings"][setting]["rate"]
-        param_dict["delay_low"] = cfg["settings"][setting]["delay"] / rate
-        param_dict["delay_high"] = cfg["settings"][setting]["delay"] / rate
+        param_dict["delay_low"] = cfg["settings"][setting]["delay_low"] / rate
+        param_dict["delay_high"] = cfg["settings"][setting]["delay_high"] / rate
 
     seed = repetition * 5
     set_random_seed(seed)
@@ -97,7 +97,7 @@ if __name__ == "__main__":
 
             pendulum = graph.get_spec("pendulum")
             if disp:
-                pendulum.config.sensors.append("image")
+                graph.add_component(pendulum.sensors.image)
                 graph.render(source=pendulum.sensors.image, rate=rate)
 
             # Check if log dir exists
@@ -112,11 +112,12 @@ if __name__ == "__main__":
                     continue
 
             train_env = create_env(cfg, repetition, graph, engine, backend, pendulum=pendulum)
+            if disp:
+                train_env.render("human")
+            train_env.reset()
             model = sb3.SAC(
                 "MlpPolicy", train_env, verbose=1, seed=seed, learning_rate=7e-4, device=device, tensorboard_log=str(log_dir)
             )
-            if disp:
-                train_env.render("human")
             model.learn(
                 total_timesteps=total_timesteps,
                 tb_log_name="logs",

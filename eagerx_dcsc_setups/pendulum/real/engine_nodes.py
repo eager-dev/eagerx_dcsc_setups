@@ -18,7 +18,7 @@ from eagerx.utils.utils import Msg
 class PendulumOutput(eagerx.EngineNode):
     @classmethod
     def make(
-        cls, name: str, rate: float, process: Optional[int] = eagerx.process.NEW_PROCESS, color: Optional[str] = "cyan"
+        cls, name: str, rate: float, process: Optional[int] = eagerx.process.NEW_PROCESS, color: Optional[str] = "cyan", delay_state: bool = True,
     ) -> NodeSpec:
         """PendulumOutput spec"""
         spec = cls.get_specification()
@@ -57,6 +57,7 @@ class PendulumInput(eagerx.EngineNode):
         fixed_delay: float = 0.0,
         process: Optional[int] = eagerx.process.NEW_PROCESS,
         color: Optional[str] = "green",
+        delay_state: bool = True,
     ):
         """PendulumInput spec"""
         spec = cls.get_specification()
@@ -66,6 +67,7 @@ class PendulumInput(eagerx.EngineNode):
             name=name, rate=rate, process=process, color=color, inputs=["tick", "u", "x"], outputs=["action_applied"]
         )
         spec.config.fixed_delay = fixed_delay
+        spec.config.states = ["delay"] if delay_state else []
 
         # Set component parameter
         spec.inputs.u.window = 1
@@ -80,9 +82,11 @@ class PendulumInput(eagerx.EngineNode):
         self.service.wait_for_service()
         self.prev_seq = None
 
-    @register.states()
-    def reset(self):
+    @register.states(delay=Space(low=0, high=0, shape=(), dtype="float32"))
+    def reset(self, delay: np.ndarray = None):
         self.prev_seq = None
+        if delay is not None:
+            self.fixed_delay = delay
 
     @register.inputs(tick=Space(dtype="int64"), u=Space(dtype="float32"), x=Space(dtype="float32"))
     @register.outputs(action_applied=Space(dtype="float32"))

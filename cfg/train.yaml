@@ -1,6 +1,6 @@
 train:
   repetitions: 5
-  disp: False
+  disp: True
   t_max: 5
   learning_rate: 0.0007
   device: cuda
@@ -35,7 +35,8 @@ settings:
     rate: 30
     actuator_rate: 90
     engine: ode
-    delay: 1  # in time steps
+    delay_low: 1.  # in time steps
+    delay_high: 1.25  # in time steps
     total_timesteps: 20000
     window_x: 2
     action_applied: True
