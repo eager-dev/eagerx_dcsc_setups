@@ -18,7 +18,12 @@ from eagerx.utils.utils import Msg
 class PendulumOutput(eagerx.EngineNode):
     @classmethod
     def make(
-        cls, name: str, rate: float, process: Optional[int] = eagerx.process.NEW_PROCESS, color: Optional[str] = "cyan", delay_state: bool = True,
+        cls,
+        name: str,
+        rate: float,
+        process: Optional[int] = eagerx.process.NEW_PROCESS,
+        color: Optional[str] = "cyan",
+        delay_state: bool = True,
     ) -> NodeSpec:
         """PendulumOutput spec"""
         spec = cls.get_specification()
@@ -105,8 +110,8 @@ class PendulumInput(eagerx.EngineNode):
         req.actuators.timeout = 0.5
 
         # Determine sleep duration to achieve fixed delay.
-        obs_ts = x.info.t_in[-1].wc_stamp
-        act_ts = u.info.t_in[-1].wc_stamp
+        obs_ts = x.info.t_in[-1].wc
+        act_ts = u.info.t_in[-1].wc
         dt = act_ts - obs_ts
         sleep_duration = self.fixed_delay - dt
 

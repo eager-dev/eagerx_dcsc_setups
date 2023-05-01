@@ -4,39 +4,35 @@ train:
   t_max: 5
   learning_rate: 0.0007
   device: cuda
+  rate: 20
+  actuator_rate: 60
+  total_timesteps: 10_000
+  delay_low: 0. # absolute delay in seconds
+  delay_high: 0.04  # absolute delay in seconds
 
 settings:
-  baseline_gym:
-    rate: 20
-    actuator_rate: 20
+  gym_baseline:
     engine: gym
-    mass_low: 0.05
-    mass_high: 0.05
-    length_low: 0.1
-    length_high: 0.1
-    total_timesteps: 5000
-  domain_randomization:
-    rate: 20
-    actuator_rate: 20
-    engine: gym
-    mass_low: 0.04
-    mass_high: 0.06
-    length_low: 0.08
-    length_high: 0.12
-    total_timesteps: 5000
-  baseline_ode:
-    rate: 30
-    actuator_rate: 90
-    engine: ode
-    total_timesteps: 20000
-    window_x: 2
-    action_applied: True
-  delay:
-    rate: 30
-    actuator_rate: 90
-    engine: ode
-    delay_low: 1.  # in time steps
-    delay_high: 1.25  # in time steps
-    total_timesteps: 20000
-    window_x: 2
-    action_applied: True
+  gym_domain_randomization:
+      engine: gym
+      domain_randomization: True
+  gym_delay:
+      engine: gym
+      delay: True
+  gym_domain_randomization_delay:
+      engine: gym
+      domain_randomization: True
+      delay: True
+  ode_baseline:
+      actuator_rate: 60
+      engine: ode
+  ode_domain_randomization:
+      engine: ode
+      domain_randomization: True
+  ode_delay:
+      engine: ode
+      delay: True
+  ode_domain_randomization_delay:
+      engine: ode
+      domain_randomization: True
+      delay: True

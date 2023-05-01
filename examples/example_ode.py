@@ -30,7 +30,7 @@ if __name__ == "__main__":
     pendulum = Pendulum.make(
         "pendulum",
         actuators=["u"],
-        sensors=["x", "action_applied"],
+        sensors=["x", "action_applied", "image"],
         states=["model_state", "max_speed", "length", "mass"],
         actuator_rate=actuator_rate,
         sensor_rate=sensor_rate,
@@ -42,7 +42,7 @@ if __name__ == "__main__":
     graph.connect(action="voltage", target=pendulum.actuators.u)
     graph.connect(source=pendulum.sensors.x, observation="angle_data", window=2)
     graph.connect(source=pendulum.sensors.action_applied, observation="action_applied", skip=True)
-    # graph.render(source=pendulum.sensors.image, rate=image_rate)
+    graph.render(source=pendulum.sensors.image, rate=image_rate)
 
     ode_engine = OdeEngine.make(rate=engine_rate, process=eagerx.ENVIRONMENT)
     real_engine = RealEngine.make(rate=engine_rate, process=eagerx.ENVIRONMENT, sync=True)
@@ -56,7 +56,7 @@ if __name__ == "__main__":
         graph=graph,
         engine=ode_engine,
         backend=backend,
-        delay_low=1 / rate,
+        delay_low=0,
         delay_high=1.5 / rate,
         evaluate=False,
     )
@@ -72,8 +72,8 @@ if __name__ == "__main__":
 
     # First train in simulation
     train_env.render("human")
-    # model.learn(total_timesteps=20_000)
-    # model.save("pendulum_delay")
+    model.learn(total_timesteps=20_000)
+    model.save("pendulum_delay")
     train_env.close()
 
     eval_env = PendulumEnv(

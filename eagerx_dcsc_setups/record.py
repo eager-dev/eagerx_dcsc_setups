@@ -102,6 +102,7 @@ if __name__ == "__main__":
                 mode = "sim"
 
                 from eagerx.backends.single_process import SingleProcess
+
                 backend = SingleProcess.make()
             else:
                 encoding = "bgr"
@@ -109,6 +110,7 @@ if __name__ == "__main__":
                 mode = "real"
 
                 from eagerx.backends.ros1 import Ros1
+
                 backend = Ros1.make()
             seed = repetition
 

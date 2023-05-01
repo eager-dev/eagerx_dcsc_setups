@@ -2,10 +2,8 @@ import eagerx
 from eagerx_dcsc_setups.pendulum.objects import Pendulum
 from eagerx_dcsc_setups.pendulum.envs import PendulumEnv
 from eagerx.engines.openai_gym.engine import GymEngine
-from eagerx_ode.engine import OdeEngine
 from eagerx_reality.engine import RealEngine
 from eagerx.wrappers import Flatten
-from eagerx.backends.single_process import SingleProcess
 from eagerx.backends.ros1 import Ros1
 from eagerx_dcsc_setups.pendulum.nodes import ResetAngle
 
@@ -20,7 +18,7 @@ if __name__ == "__main__":
     np.random.seed(seed)
 
     sensor_rate = rate
-    actuator_rate = rate
+    actuator_rate = 40
     engine_rate = max(sensor_rate, actuator_rate)
 
     # Create pendulum object
@@ -28,17 +26,24 @@ if __name__ == "__main__":
         "pendulum",
         actuators=["u"],
         sensors=["x", "image"],
-        states=["model_state", "max_speed", "length", "mass"],
+        states=["model_state", "max_speed", "length", "mass", "dt"],
         actuator_rate=actuator_rate,
         sensor_rate=sensor_rate,
         camera_index=0,
     )
+    pendulum.states.dt.space.low = 1 / engine_rate
+    pendulum.states.dt.space.high = 1 / engine_rate
+    # pendulum.states.mass.space.low = pendulum.states.mass.space.low * 0.7
+    # pendulum.states.mass.space.high = pendulum.states.mass.space.high * 1.3
+    # pendulum.states.length.space.low = pendulum.states.length.space.low * 0.7
+    # pendulum.states.length.space.high = pendulum.states.length.space.high * 1.3
 
     # Create graph
     graph = eagerx.Graph.create()
     graph.add(pendulum)
     graph.connect(action="voltage", target=pendulum.actuators.u)
-    graph.connect(source=pendulum.sensors.x, observation="angle_data")
+    # graph.connect(source=pendulum.sensors.action_applied, observation="action_applied", skip=True)
+    graph.connect(source=pendulum.sensors.x, observation="angle_data", window=1)
     graph.render(source=pendulum.sensors.image, rate=image_rate)
 
     gym_engine = GymEngine.make(rate=sensor_rate, process=eagerx.ENVIRONMENT)
@@ -53,11 +58,9 @@ if __name__ == "__main__":
         graph=graph,
         engine=gym_engine,
         backend=backend,
-        mass_low=0.03,
-        mass_high=0.05,
-        length_low=0.1,
-        length_high=0.14,
         evaluate=False,
+        # delay_low=0.0,
+        # delay_high=0.03,
     )
     train_env = w.rescale_action.RescaleAction(Flatten(train_env), min_action=-1.0, max_action=1.0)
 
@@ -67,8 +70,11 @@ if __name__ == "__main__":
     # Extra reset because of render bug
     train_env.reset()
     model = sb3.SAC("MlpPolicy", train_env, verbose=1, seed=seed, learning_rate=7e-4)
-    model.learn(total_timesteps=5_000)
+    # model.learn(total_timesteps=5_000)
+    # model.save("pendulum_dr")
     train_env.close()
+
+    model = sb3.SAC.load("pendulum")
 
     pendulum = graph.get_spec("pendulum")
 
@@ -89,14 +95,15 @@ if __name__ == "__main__":
         engine=real_engine,
         backend=backend,
         evaluate=True,
+        # delay_low=0.015,
+        # delay_high=0.015,
     )
     eval_env = w.rescale_action.RescaleAction(Flatten(eval_env), min_action=-1.0, max_action=1.0)
     eval_env.render("human")
 
     # eval_env.reset()
-    for _ in range(10):
+    for _ in range(10000):
         done = False
-        obs = eval_env.reset()
         obs = eval_env.reset()
         while not done:
             action, _ = model.predict(obs, deterministic=True)

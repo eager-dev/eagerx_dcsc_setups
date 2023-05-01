@@ -28,16 +28,11 @@ def create_env(
     pendulum: eagerx.specs.ObjectSpec,
 ):
     t_max = cfg["train"]["t_max"]
-
-    param_dict = {}
-    for parameter in ["mass_low", "mass_high", "length_low", "length_high", "rate"]:
-        if parameter in cfg["settings"][setting]:
-            param_dict[parameter] = cfg["settings"][setting][parameter]
-
-    if "delay_low" in cfg["settings"][setting] and "delay_high" in cfg["settings"][setting]:
-        rate = cfg["settings"][setting]["rate"]
-        param_dict["delay_low"] = cfg["settings"][setting]["delay_low"] / rate
-        param_dict["delay_high"] = cfg["settings"][setting]["delay_high"] / rate
+    delay_low = None
+    delay_high = None
+    if "delay" in cfg["settings"][setting] and cfg["settings"][setting]["delay"]:
+        delay_low = cfg["train"]["delay_low"]
+        delay_high = cfg["train"]["delay_high"]
 
     seed = repetition * 5
     set_random_seed(seed)
@@ -46,12 +41,14 @@ def create_env(
 
     env = PendulumEnv(
         name=f"ArmEnv{seed}",
+        rate=20,
         graph=graph,
         engine=engine,
         backend=backend,
         t_max=t_max,
         seed=seed,
-        **param_dict,
+        delay_low=delay_low,
+        delay_high=delay_high,
     )
     return w.rescale_action.RescaleAction(Flatten(env), min_action=-1.0, max_action=1.0)
 
@@ -73,15 +70,16 @@ if __name__ == "__main__":
     disp = cfg["train"]["disp"]
     learning_rate = cfg["train"]["learning_rate"]
     device = cfg["train"]["device"]
+    rate = cfg["train"]["rate"]
+    actuator_rate = cfg["train"]["actuator_rate"]
+    total_timesteps = cfg["train"]["total_timesteps"]
 
     from eagerx.backends.single_process import SingleProcess
+
     backend = SingleProcess.make()
 
     for repetition in range(repetitions):
         for setting in cfg["settings"].keys():
-            rate = cfg["settings"][setting]["rate"]
-            actuator_rate = cfg["settings"][setting]["actuator_rate"]
-            total_timesteps = cfg["settings"][setting]["total_timesteps"]
             engine = cfg["settings"][setting]["engine"]
             engine_rate = max(rate, actuator_rate)
             if engine == "ode":

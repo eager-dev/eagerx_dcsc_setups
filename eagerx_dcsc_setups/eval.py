@@ -10,6 +10,7 @@ from eagerx_dcsc_setups.pendulum.nodes import ResetAngle
 # Common imports
 import os
 import yaml
+import pickle
 from pathlib import Path
 from typing import Dict
 import gym.wrappers as w
@@ -23,6 +24,7 @@ from stable_baselines3.common.utils import set_random_seed
 
 def create_env(
     cfg: Dict,
+    train_cfg: Dict,
     repetition: int,
     graph: eagerx.Graph,
     engine: eagerx.specs.EngineSpec,
@@ -31,15 +33,15 @@ def create_env(
 ):
     t_max = cfg["eval"]["t_max"]
 
-    param_dict = {}
-    for parameter in ["mass_low", "mass_high", "length_low", "length_high", "rate"]:
-        if parameter in cfg["settings"][setting]:
-            param_dict[parameter] = cfg["settings"][setting][parameter]
-
-    if "delay_low" in cfg["settings"][setting] and "delay_high" in cfg["settings"][setting]:
-        rate = cfg["settings"][setting]["rate"]
-        param_dict["delay_low"] = cfg["settings"][setting]["delay_low"] / rate
-        param_dict["delay_high"] = cfg["settings"][setting]["delay_high"] / rate
+    rate = train_cfg["train"]["rate"]
+    delay_low = None
+    delay_high = None
+    if not cfg["eval"]["sim"]:
+        delay_low = cfg["eval"]["delay_low"]
+        delay_high = cfg["eval"]["delay_high"]
+    elif "delay" in cfg["settings"][setting] and cfg["settings"][setting]["delay"]:
+        delay_low = cfg["train"]["delay_low"]
+        delay_high = cfg["train"]["delay_high"]
 
     seed = 10**5 - repetition * 5
     set_random_seed(seed)
@@ -48,13 +50,15 @@ def create_env(
 
     env = PendulumEnv(
         name=f"ArmEnv_{setting}_{seed}",
+        rate=rate,
         graph=graph,
         engine=engine,
         backend=backend,
         t_max=t_max,
         seed=seed,
         evaluate=True,
-        **param_dict,
+        delay_low=delay_low,
+        delay_high=delay_high,
     )
     return w.rescale_action.RescaleAction(Flatten(env), min_action=-1.0, max_action=1.0)
 
@@ -69,6 +73,9 @@ if __name__ == "__main__":
     cfg_path = root / "cfg" / "eval.yaml"
     with open(str(cfg_path), "r") as f:
         cfg = yaml.safe_load(f)
+    train_cfg_path = root / "cfg" / "train.yaml"
+    with open(str(train_cfg_path), "r") as f:
+        train_cfg = yaml.safe_load(f)
 
     # Get parameters
     repetitions = cfg["eval"]["repetitions"]
@@ -77,21 +84,18 @@ if __name__ == "__main__":
     episodes = cfg["eval"]["episodes"]
     device = cfg["eval"]["device"]
     sim = cfg["eval"]["sim"]
+    total_timesteps = train_cfg["train"]["total_timesteps"]
+    rate = train_cfg["train"]["rate"]
+    actuator_rate = train_cfg["train"]["actuator_rate"]
+    cfg["settings"] = train_cfg["settings"]
 
-    if sim:
-        train_cfg_path = root / "cfg" / "train.yaml"
-        with open(str(cfg_path), "r") as f:
-            train_cfg = yaml.safe_load(f)
-        cfg["settings"] = train_cfg["settings"]
+    engine_rate = max(rate, actuator_rate)
+
 
 
     for repetition in range(repetitions):
         for setting in cfg["settings"].keys():
-            rate = cfg["settings"][setting]["rate"]
-            actuator_rate = cfg["settings"][setting]["actuator_rate"]
-            total_timesteps = cfg["settings"][setting]["total_timesteps"]
             engine = cfg["settings"][setting]["engine"]
-            engine_rate = max(rate, actuator_rate)
             if sim:
                 if engine == "ode":
                     engine = OdeEngine.make(rate=engine_rate, process=eagerx.ENVIRONMENT)
@@ -100,12 +104,14 @@ if __name__ == "__main__":
                 mode = "sim"
 
                 from eagerx.backends.single_process import SingleProcess
+
                 backend = SingleProcess.make()
             else:
                 engine = RealEngine.make(rate=engine_rate, process=eagerx.ENVIRONMENT, sync=True)
                 mode = "real"
 
                 from eagerx.backends.ros1 import Ros1
+
                 backend = Ros1.make()
             seed = repetition
 
@@ -136,7 +142,7 @@ if __name__ == "__main__":
 
             graph.disconnect(action="voltage", target=pendulum.actuators.u)
 
-            gains = np.array([2.0, 0.2, 1.0]) * 30 / actuator_rate
+            gains = np.array([0.5, 0.1, 0.1])
             reset = ResetAngle.make("reset_angle", rate, u_range=[-2, 2], gains=gains, process=eagerx.NEW_PROCESS)
             graph.add(reset)
 
@@ -147,7 +153,7 @@ if __name__ == "__main__":
 
             # Check if log dir exists
             if os.path.exists(LOAD_DIR):
-                eval_env = create_env(cfg, repetition, graph, engine, backend, pendulum)
+                eval_env = create_env(cfg, train_cfg, repetition, graph, engine, backend, pendulum)
                 print("Loading model from: ", LOAD_DIR)
                 model = sb3.SAC.load(LOAD_DIR, env=eval_env, device=device)
                 if disp:
@@ -158,21 +164,20 @@ if __name__ == "__main__":
                 continue
             print(f"Starting evaluation for {setting} {repetition}")
             eval_results = []
-            # obs_dict = {}
-            # action_dict = {}
+            obs_dict = {}
+            action_dict = {}
             for i in tqdm(range(episodes)):
-                # obs_dict[i] = []
-                # action_dict[i] = []
+                obs_dict[i] = []
+                action_dict[i] = []
                 obs = eval_env.reset()
-                obs = eval_env.reset()
-                # obs_dict[i].append(obs)
+                obs_dict[i].append(obs)
                 done = False
                 episodic_reward = 0
                 while not done:
                     action, _ = model.predict(obs, deterministic=True)
-                    # action_dict[i].append(action)
+                    action_dict[i].append(action)
                     obs, reward, done, info = eval_env.step(action)
-                    # obs_dict[i].append(obs)
+                    obs_dict[i].append(obs)
                     episodic_reward += reward
                 eval_results.append(episodic_reward)
             eval_results = np.array(eval_results)
@@ -180,15 +185,15 @@ if __name__ == "__main__":
             std = np.std(eval_results)
             print(f"Mean: {mean}, Std: {std}")
             # Save results
-            # eval_dict = yaml.safe_load(open(str(eval_file), "r"))
-            # if eval_dict is None:
-            #     eval_dict = {}
-            # eval_dict[mode] = {"mean": float(mean), "std": float(std), "results": eval_results.tolist()}
-            # with open(str(eval_file), "w") as f:
-            #     yaml.dump(eval_dict, f)
-            # # Save observations and actions
-            # with open(str(eval_log_dir / f"{mode}_obs.pkl"), "wb") as f:
-            #     pickle.dump(obs_dict, f)
-            # with open(str(eval_log_dir / f"{mode}_action.pkl"), "wb") as f:
-            #     pickle.dump(action_dict, f)
+            eval_dict = yaml.safe_load(open(str(eval_file), "r"))
+            if eval_dict is None:
+                eval_dict = {}
+            eval_dict[mode] = {"mean": float(mean), "std": float(std), "results": eval_results.tolist()}
+            with open(str(eval_file), "w") as f:
+                yaml.dump(eval_dict, f)
+            # Save observations and actions
+            with open(str(eval_log_dir / f"{mode}_obs.pkl"), "wb") as f:
+                pickle.dump(obs_dict, f)
+            with open(str(eval_log_dir / f"{mode}_action.pkl"), "wb") as f:
+                pickle.dump(action_dict, f)
             eval_env.shutdown()

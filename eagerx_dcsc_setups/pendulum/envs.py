@@ -16,10 +16,6 @@ class PendulumEnv(eagerx.BaseEnv):
         evaluate: bool = False,
         seed: int = 0,
         t_max: float = 5,
-        mass_low: float = 0.04,
-        mass_high: float = 0.06,
-        length_low: float = 0.08,
-        length_high: float = 0.12,
         delay_low: float = None,
         delay_high: float = None,
         dt: float = None,
@@ -35,10 +31,6 @@ class PendulumEnv(eagerx.BaseEnv):
         :param evaluate: If True we will create an evaluation environment, i.e. not performing domain randomization.
         :param seed: The seed used to initialize the environment.
         :param t_max: The maximum episode length (seconds).
-        :param mass_low: The lower bound of the mass domain randomization.
-        :param mass_high: The upper bound of the mass domain randomization.
-        :param length_low: The lower bound of the length domain randomization.
-        :param length_high: The upper bound of the length domain randomization.
         :param delay_low: The lower bound of the delay domain randomization.
         :param delay_high: The upper bound of the delay domain randomization.
         :param dt: The time step of the environment. If None, it will be not be set.
@@ -50,10 +42,6 @@ class PendulumEnv(eagerx.BaseEnv):
         self.episode_length = t_max * rate
 
         # Set domain randomization parameters
-        self.mass_low = mass_low
-        self.mass_high = mass_high
-        self.length_low = length_low
-        self.length_high = length_high
         self.delay_low = delay_low
         self.delay_high = delay_high
 
@@ -117,16 +105,6 @@ class PendulumEnv(eagerx.BaseEnv):
             offset = np.random.rand() - 0.5
             theta = np.pi - offset if offset > 0 else -np.pi - offset
             states["pendulum/model_state"] = np.array([theta, 0], dtype="float32")
-
-        # Sample mass (kg)
-        if "pendulum/mass" in states:
-            states["pendulum/mass"] = np.random.uniform(low=self.mass_low, high=self.mass_high, size=()).astype(
-                "float32"
-            )  # Sample mass (kg)
-        if "pendulum/length" in states:
-            states["pendulum/length"] = np.random.uniform(low=self.length_low, high=self.length_high, size=()).astype(
-                "float32"
-            )  # Sample length (m)
 
         # Sample delay
         if self.delay_low is None or self.delay_high is None:

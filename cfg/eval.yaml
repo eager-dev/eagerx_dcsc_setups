@@ -1,5 +1,5 @@
 eval:
-  repetitions: 1
+  repetitions: 5
   disp: False
   t_max: 10
   episodes: 10
@@ -7,39 +7,11 @@ eval:
   sim: False
   cam_index_rv: 2
   cam_index_ov: 4
+  delay_low: 0.02  # absolute delay in seconds
+  delay_high: 0.02  # absolute delay in seconds
 
 record:
   episodes: 2
   video_width: 480
   video_height: 480
   overwrite: True
-
-settings:
-  baseline_gym:
-    rate: 20
-    actuator_rate: 20
-    engine: gym
-    total_timesteps: 5000
-  domain_randomization:
-    rate: 20
-    actuator_rate: 20
-    engine: gym
-    total_timesteps: 5000
-  baseline_ode:
-    rate: 30
-    actuator_rate: 90
-    engine: ode
-    total_timesteps: 20000
-    window_x: 2
-    delay_low: 1.25  # in time steps
-    delay_high: 1.25  # in time steps
-    action_applied: True
-  delay:
-    rate: 30
-    actuator_rate: 90
-    engine: ode
-    delay_low: 1.25  # in time steps
-    delay_high: 1.25  # in time steps
-    total_timesteps: 20000
-    window_x: 2
-    action_applied: True

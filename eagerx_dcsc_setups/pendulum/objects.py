@@ -23,7 +23,7 @@ class Pendulum(eagerx.Object):
         model_state=Space(low=[-np.pi, -9], high=[np.pi, 9], dtype="float32"),
         model_parameters=Space(dtype="float32"),
         mass=Space(low=0.04, high=0.04, shape=(), dtype="float32"),
-        length=Space(low=0.04, high=0.04, shape=(), dtype="float32"),
+        length=Space(low=0.12, high=0.12, shape=(), dtype="float32"),
         max_speed=Space(low=22, high=22, shape=(), dtype="float32"),
         dt=Space(low=0.05, high=0.05, shape=(), dtype="float32"),
     )
@@ -33,9 +33,9 @@ class Pendulum(eagerx.Object):
         actuators: List[str] = None,
         sensors: List[str] = None,
         states: List[str] = None,
-        sensor_rate: float = 30,
+        sensor_rate: float = 20,
         image_rate: float = 15,
-        actuator_rate: float = 30,
+        actuator_rate: float = 60,
         render_shape: List[int] = None,
         camera_index: int = 2,
         Dfun: str = None,
@@ -73,16 +73,15 @@ class Pendulum(eagerx.Object):
         # Set model_parameters properties: (space_converters) # [J, m, l, b, K, R, c, d]
         fixed = [
             0.000159931461600856,
-            0.75 * 0.0508581731919534,
+            0.0508581731919534,
             0.0415233722862552,
-            0.75 * 1.43298488358436e-05,
+            1.43298488358436e-05,
             0.0333391179016334,
             7.73125142447252,
-            0.75 * 0.000975041213361349,
+            0.000975041213361349,
             165.417960777425,
         ]
-        # diff = [0.00, 0.00, 0.00, 0.25, 0.00, 0.25, 0.00]  # Percentual delta with respect to fixed value & scale damping with 0.5
-        diff = [0.00, 0.25, 0.00, 0.25, 0.00, 0.00, 0.25, 0.00]  # Percentual delta with respect to fixed value
+        diff = [0.0, 0.1, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0]  # Percentual delta with respect to fixed value
         low = [val - diff * val for val, diff in zip(fixed, diff)]
         high = [val + diff * val for val, diff in zip(fixed, diff)]
         spec.states.model_parameters.space = Space(low=low, high=high, dtype="float32")
@@ -162,6 +161,7 @@ class Pendulum(eagerx.Object):
 
         # Couple engine states
         spec.engine.states.model_state = RandomActionAndSleep.make(sleep_time=1.0, repeat=1)
+        # spec.engine.states.model_state = DummyState.make()
         spec.engine.states.model_parameters = DummyState.make()
         spec.engine.states.mass = DummyState.make()
         spec.engine.states.length = DummyState.make()
@@ -202,7 +202,7 @@ class Pendulum(eagerx.Object):
 
         # Set engine-specific parameters
         spec.engine.env_id = "Pendulum-v1"
-        spec.engine.seed = spec.config.seed
+        # spec.engine.seed = spec.config.seed
 
         # Create engine states that implement the registered states
         # Note: The GymEngine implementation unfortunately does not support setting the OpenAI environment state,
@@ -227,7 +227,8 @@ class Pendulum(eagerx.Object):
 
         x = FloatOutput.make("x", rate=spec.sensors.x.rate, idx=[0, 1])
         # Create actuator engine node
-        action = ActionActuator.make("u", rate=spec.actuators.u.rate, process=2, zero_action=[0], delay_state=True)
+        # action = ActionActuator.make("u", rate=spec.actuators.u.rate, process=2, zero_action=[0], delay_state=True)
+        action = ActionActuator.make("u", rate=spec.actuators.u.rate, process=2, zero_action=[0])
 
         # Add all engine nodes to the engine-specific graph
         graph.add([obs, x, image, action])
