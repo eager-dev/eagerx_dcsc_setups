@@ -7,8 +7,8 @@ eval:
   sim: False
   cam_index_rv: 2
   cam_index_ov: 4
-  delay_low: 0.02  # absolute delay in seconds
-  delay_high: 0.02  # absolute delay in seconds
+  delay_low: 0.035  # absolute delay in seconds
+  delay_high: 0.035  # absolute delay in seconds
 
 record:
   episodes: 2

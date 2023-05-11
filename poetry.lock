@@ -331,19 +331,20 @@ files = [
 
 [[package]]
 name = "eagerx"
-version = "0.1.33"
+version = "0.1.35"
 description = "Engine Angostic Graph Environments for Robotics"
 category = "main"
 optional = false
 python-versions = ">=3.6.2,<4.0.0"
 files = [
-    {file = "eagerx-0.1.33-py3-none-any.whl", hash = "sha256:7b22f32732f57e1ec92c521c6507a840ecafc046ed73437d902567a5bac2855e"},
-    {file = "eagerx-0.1.33.tar.gz", hash = "sha256:46a49214cd1aecdcd79d004f446ae337bad48fcc2e296e12b2be2e3ae07be92b"},
+    {file = "eagerx-0.1.35-py3-none-any.whl", hash = "sha256:20ef2d08595ddeb7c38dae3cd240e025c9fbd79634b5d4175192e2baa488b203"},
+    {file = "eagerx-0.1.35.tar.gz", hash = "sha256:8aa788783075ee33479bb9f99614eabed66675db942c842c5b627a769a300021"},
 ]
 
 [package.dependencies]
 defusedxml = ">=0.7.1,<0.8.0"
 gym = ">=0.21.0,<0.22.0"
+importlib-metadata = "<5.0"
 matplotlib = ">=3.0,<4.0"
 netifaces = ">=0.11.0,<0.12.0"
 networkx = ">=2.5.1,<3.0.0"
@@ -356,6 +357,7 @@ PyYAML = ">=6.0,<7.0"
 rospkg = ">=1.3.0,<2.0.0"
 Rx = ">=3.2.0,<4.0.0"
 scipy = ">=1.0,<2.0"
+setuptools = "<=65.5.0"
 Sphinx = ">=4.0,<5.0"
 sphinx-autodoc-typehints = ">=1.0,<2.0"
 sphinx-rtd-theme = ">=1.0,<2.0"
@@ -2255,4 +2257,4 @@ testing = ["func-timeout", "jaraco.itertools", "pytest (>=6)", "pytest-black (>=
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "be7dce4d47a9f51f721958149ed27717db4a3b6153538120c6c4acc7fdb7c6ea"
+content-hash = "33a52b98337ef4e392a9379fe3f6659188e0bd68d0e3df8054e97b9b73aefe4d"

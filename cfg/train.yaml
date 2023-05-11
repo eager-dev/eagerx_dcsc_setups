@@ -6,33 +6,33 @@ train:
   device: cuda
   rate: 20
   actuator_rate: 60
-  total_timesteps: 10_000
-  delay_low: 0. # absolute delay in seconds
+  total_timesteps: 25_000
+  delay_low: 0.03  # absolute delay in seconds
   delay_high: 0.04  # absolute delay in seconds
 
 settings:
   gym_baseline:
-    engine: gym
+      engine: gym
+      extend: false
+      name: gym
   gym_domain_randomization:
       engine: gym
+      extend: false
       domain_randomization: True
-  gym_delay:
-      engine: gym
-      delay: True
-  gym_domain_randomization_delay:
-      engine: gym
-      domain_randomization: True
-      delay: True
+      name: gym + DR
   ode_baseline:
-      actuator_rate: 60
       engine: ode
+      name: ode
   ode_domain_randomization:
       engine: ode
       domain_randomization: True
+      name: ode + DR
   ode_delay:
       engine: ode
       delay: True
+      name: ode + DS
   ode_domain_randomization_delay:
       engine: ode
       domain_randomization: True
       delay: True
+      name: ode + DR + DS

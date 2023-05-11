@@ -36,12 +36,12 @@ def create_env(
     rate = train_cfg["train"]["rate"]
     delay_low = None
     delay_high = None
-    if not cfg["eval"]["sim"]:
+    if not cfg["eval"]["sim"] and cfg["settings"][setting]["engine"] == "ode":
         delay_low = cfg["eval"]["delay_low"]
         delay_high = cfg["eval"]["delay_high"]
     elif "delay" in cfg["settings"][setting] and cfg["settings"][setting]["delay"]:
-        delay_low = cfg["train"]["delay_low"]
-        delay_high = cfg["train"]["delay_high"]
+        delay_low = train_cfg["train"]["delay_low"]
+        delay_high = train_cfg["train"]["delay_high"]
 
     seed = 10**5 - repetition * 5
     set_random_seed(seed)
@@ -96,6 +96,8 @@ if __name__ == "__main__":
     for repetition in range(repetitions):
         for setting in cfg["settings"].keys():
             engine = cfg["settings"][setting]["engine"]
+
+            total_timesteps = train_cfg["train"]["total_timesteps"] if engine == "ode" else 10_000
             if sim:
                 if engine == "ode":
                     engine = OdeEngine.make(rate=engine_rate, process=eagerx.ENVIRONMENT)

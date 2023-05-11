@@ -72,7 +72,6 @@ if __name__ == "__main__":
     device = cfg["train"]["device"]
     rate = cfg["train"]["rate"]
     actuator_rate = cfg["train"]["actuator_rate"]
-    total_timesteps = cfg["train"]["total_timesteps"]
 
     from eagerx.backends.single_process import SingleProcess
 
@@ -84,8 +83,10 @@ if __name__ == "__main__":
             engine_rate = max(rate, actuator_rate)
             if engine == "ode":
                 engine = OdeEngine.make(rate=engine_rate, process=eagerx.ENVIRONMENT)
+                total_timesteps = cfg["train"]["total_timesteps"]
             elif engine == "gym":
                 engine = GymEngine.make(rate=engine_rate, process=eagerx.ENVIRONMENT)
+                total_timesteps = 10_000
 
             seed = repetition
             log_dir = root / "exps" / "train" / "runs" / f"{setting}_{repetition}"

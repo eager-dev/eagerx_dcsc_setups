@@ -24,6 +24,7 @@ from stable_baselines3.common.utils import set_random_seed
 
 def create_env(
     cfg: Dict,
+    train_cfg: Dict,
     repetition: int,
     graph: eagerx.Graph,
     engine: eagerx.specs.EngineSpec,
@@ -32,15 +33,15 @@ def create_env(
 ):
     t_max = cfg["eval"]["t_max"]
 
-    param_dict = {}
-    for parameter in ["mass_low", "mass_high", "length_low", "length_high", "rate"]:
-        if parameter in cfg["settings"][setting]:
-            param_dict[parameter] = cfg["settings"][setting][parameter]
-
-    if "delay" in cfg["settings"][setting]:
-        rate = cfg["settings"][setting]["rate"]
-        param_dict["delay_low"] = cfg["settings"][setting]["delay"] / rate
-        param_dict["delay_high"] = cfg["settings"][setting]["delay"] / rate
+    rate = train_cfg["train"]["rate"]
+    delay_low = None
+    delay_high = None
+    if not cfg["eval"]["sim"] and cfg["settings"][setting]["engine"] == "ode":
+        delay_low = cfg["eval"]["delay_low"]
+        delay_high = cfg["eval"]["delay_high"]
+    elif "delay" in cfg["settings"][setting] and cfg["settings"][setting]["delay"]:
+        delay_low = train_cfg["train"]["delay_low"]
+        delay_high = train_cfg["train"]["delay_high"]
 
     seed = 10**5 - repetition * 5
     set_random_seed(seed)
@@ -49,13 +50,15 @@ def create_env(
 
     env = PendulumEnv(
         name=f"ArmEnv_{setting}_{seed}",
+        rate=rate,
         graph=graph,
         engine=engine,
         backend=backend,
         t_max=t_max,
         seed=seed,
         evaluate=True,
-        **param_dict,
+        delay_low=delay_low,
+        delay_high=delay_high,
     )
     return w.rescale_action.RescaleAction(Flatten(env), min_action=-1.0, max_action=1.0)
 
@@ -70,12 +73,22 @@ if __name__ == "__main__":
     cfg_path = root / "cfg" / "eval.yaml"
     with open(str(cfg_path), "r") as f:
         cfg = yaml.safe_load(f)
+    train_cfg_path = root / "cfg" / "train.yaml"
+    with open(str(train_cfg_path), "r") as f:
+        train_cfg = yaml.safe_load(f)
 
     # Get parameters
     repetitions = cfg["eval"]["repetitions"]
     t_max = cfg["eval"]["t_max"]
+    disp = cfg["eval"]["disp"]
     device = cfg["eval"]["device"]
     sim = cfg["eval"]["sim"]
+    total_timesteps = train_cfg["train"]["total_timesteps"]
+    rate = train_cfg["train"]["rate"]
+    actuator_rate = train_cfg["train"]["actuator_rate"]
+    cfg["settings"] = train_cfg["settings"]
+
+    engine_rate = max(rate, actuator_rate)
 
     # Record parameters
     episodes = cfg["record"]["episodes"]
@@ -85,10 +98,8 @@ if __name__ == "__main__":
 
     for repetition in range(repetitions):
         for setting in cfg["settings"].keys():
-            rate = cfg["settings"][setting]["rate"]
-            actuator_rate = cfg["settings"][setting]["actuator_rate"]
-            total_timesteps = cfg["settings"][setting]["total_timesteps"]
             engine = cfg["settings"][setting]["engine"]
+            total_timesteps = train_cfg["train"]["total_timesteps"] if engine == "ode" else 10_000
             engine_rate = max(rate, actuator_rate)
             if sim:
                 if engine == "ode":
@@ -146,7 +157,7 @@ if __name__ == "__main__":
 
             # Check if log dir exists
             if os.path.exists(LOAD_DIR):
-                eval_env = create_env(cfg, repetition, graph, engine, backend, pendulum)
+                eval_env = create_env(cfg, train_cfg, repetition, graph, engine, backend, pendulum)
                 print("Loading model from: ", LOAD_DIR)
                 model = sb3.SAC.load(LOAD_DIR, env=eval_env, device=device)
             else:

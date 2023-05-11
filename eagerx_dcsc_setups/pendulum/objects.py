@@ -22,8 +22,8 @@ class Pendulum(eagerx.Object):
     @register.engine_states(
         model_state=Space(low=[-np.pi, -9], high=[np.pi, 9], dtype="float32"),
         model_parameters=Space(dtype="float32"),
-        mass=Space(low=0.04, high=0.04, shape=(), dtype="float32"),
-        length=Space(low=0.12, high=0.12, shape=(), dtype="float32"),
+        mass=Space(low=0.05, high=0.05, shape=(), dtype="float32"),
+        length=Space(low=0.05, high=0.05, shape=(), dtype="float32"),
         max_speed=Space(low=22, high=22, shape=(), dtype="float32"),
         dt=Space(low=0.05, high=0.05, shape=(), dtype="float32"),
     )
@@ -81,7 +81,7 @@ class Pendulum(eagerx.Object):
             0.000975041213361349,
             165.417960777425,
         ]
-        diff = [0.0, 0.1, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0]  # Percentual delta with respect to fixed value
+        diff = [0.0, 0.05, 0.05, 0.0, 0.0, 0.0, 0.0, 0.0]  # Percentual delta with respect to fixed value
         low = [val - diff * val for val, diff in zip(fixed, diff)]
         high = [val + diff * val for val, diff in zip(fixed, diff)]
         spec.states.model_parameters.space = Space(low=low, high=high, dtype="float32")
@@ -227,11 +227,11 @@ class Pendulum(eagerx.Object):
 
         x = FloatOutput.make("x", rate=spec.sensors.x.rate, idx=[0, 1])
         # Create actuator engine node
-        # action = ActionActuator.make("u", rate=spec.actuators.u.rate, process=2, zero_action=[0], delay_state=True)
-        action = ActionActuator.make("u", rate=spec.actuators.u.rate, process=2, zero_action=[0])
+        action = ActionActuator.make("u", rate=spec.actuators.u.rate, process=2, zero_action=[0], delay_state=True)
+        action_applied = FloatOutput.make("u_applied", process=2, rate=spec.actuators.u.rate)
 
         # Add all engine nodes to the engine-specific graph
-        graph.add([obs, x, image, action])
+        graph.add([obs, x, image, action, action_applied])
 
         # x
         graph.connect(source=obs.outputs.observation, target=x.inputs.observation_array)
@@ -244,8 +244,12 @@ class Pendulum(eagerx.Object):
         # Note: not to be confused with sensor "u", for which we do not provide an implementation here.
         # Note: We add a processor that negates the action, as the torque in OpenAI gym is defined counter-clockwise.
         from eagerx_dcsc_setups.pendulum.gym.processor import VoltageToMotorTorque
-
-        action.inputs.action.processor = VoltageToMotorTorque.make(K=0.03333, R=7.731)
-        action.outputs.action_applied.processor = VoltageToMotorTorque.make(K=7.731, R=0.03333)
+        K = 0.03333
+        R = 7.731
+        action.inputs.action.processor = VoltageToMotorTorque.make(K=K, R=R)
+        # scale = K / R
+        # R / K
+        action.outputs.action_applied.processor = VoltageToMotorTorque.make(K=R, R=K)
         graph.connect(actuator="u", target=action.inputs.action)
-        graph.connect(source=action.outputs.action_applied, sensor="action_applied")
+        graph.connect(source=action.outputs.action_applied, target=action_applied.inputs.observation_array)
+        graph.connect(source=action_applied.outputs.observation, sensor="action_applied")
