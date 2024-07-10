@@ -33,21 +33,6 @@ You can install the package using pip:
 
     pip3 install eagerx-dcsc-setups
 
-Cite EAGERx
-===========
-If you are using EAGERx for your scientific publications, please cite:
-
-.. code:: bibtex
-
-    @article{eagerx,
-        author  = {van der Heijden, Bas and Luijkx, Jelle, and Ferranti, Laura and Kober, Jens and Babuska, Robert},
-        title = {EAGERx: Engine Agnostic Graph Environments for Robotics},
-        year = {2022},
-        publisher = {GitHub},
-        journal = {GitHub repository},
-        howpublished = {\url{https://github.com/eager-dev/eagerx}}
-    }
-
 Acknowledgements
 =================
 EAGERx is funded by the `OpenDR <https://opendr.eu/>`_ Horizon 2020 project.
